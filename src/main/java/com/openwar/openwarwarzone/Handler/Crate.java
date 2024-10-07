@@ -75,9 +75,17 @@ public class Crate implements Listener {
         int cooldown = crate.get(blockName);
         crateCooldowns.put(blockLocation, System.currentTimeMillis() + (cooldown * 60 * 1000L));
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§8[§a✓§8]"));
-        animationLoot(player);
-        newCrateLoot(player, block.getType().toString());
+        triggerLootAnimation(player, block);
     }
+
+
+    public void triggerLootAnimation(Player player, Block block) {
+        animationLoot(player);
+        Bukkit.getScheduler().runTaskLater(main, () -> {
+            newCrateLoot(player, block.getType().toString());
+        }, 70L);
+    }
+
     private void newCrateLoot(Player player, String name) {
         switch (name) {
             case "MWC:FRIDGE_CLOSED":
@@ -87,6 +95,25 @@ public class Crate implements Listener {
 
     }
     private void animationLoot(Player player) {
-        
+        new BukkitRunnable() {
+            int progress = 0;
+            @Override
+            public void run() {
+                StringBuilder progressBar = new StringBuilder();
+                for (int i = 0; i < 7; i++) {
+                    if (i < progress) {
+                        progressBar.append("§c█");
+                    } else {
+                        progressBar.append("§7█");
+                    }
+                }
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(progressBar.toString()));
+                progress++;
+                if (progress > 7) {
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(main, 0, 10);
     }
+
 }
