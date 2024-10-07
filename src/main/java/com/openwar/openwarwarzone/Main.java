@@ -27,7 +27,7 @@ public final class Main extends JavaPlugin {
         System.out.println(" ");
         System.out.println(" OpenWar - Warzone loading...");
         if (!setupDepend()) {return;}
-        getServer().getPluginManager().registerEvents(new Crate(pl), this);
+        getServer().getPluginManager().registerEvents(new Crate(pl, this), this);
 
     }
 
