@@ -1,0 +1,4 @@
+name: OpenWar-Warzone
+version: '${project.version}'
+main: com.openwar.openwarwarzone.Main
+depend: [OpenWar-Core]
