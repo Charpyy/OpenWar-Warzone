@@ -108,7 +108,7 @@ public class Crate implements Listener {
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§8[§a✓§8]"));
         switch (name) {
             case "MWC_FRIDGE_CLOSED":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -127,7 +127,7 @@ public class Crate implements Listener {
                 break;
 
             case "MWC_FRIDGE_OPEN":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -145,7 +145,7 @@ public class Crate implements Listener {
                 player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
             case "MWC_FILINGCABINET":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -164,7 +164,7 @@ public class Crate implements Listener {
                 player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
             case "MWC_FILINGCABINET_OPENED":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -183,7 +183,7 @@ public class Crate implements Listener {
                 player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
             case "MWC_DUMPSTER":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -201,7 +201,7 @@ public class Crate implements Listener {
                 player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
             case "MWC_WOODEN_CRATE_OPENED":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -218,7 +218,7 @@ public class Crate implements Listener {
                 player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
             case "MWC_WEAPONS_CASE":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -235,7 +235,7 @@ public class Crate implements Listener {
                 player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
             case "MWC_AMMO_BOX":
-                exp = crate.get(name);
+                exp = crate.get(name)*2;
                 xp = pl.loadPlayerData(player.getUniqueId(), null);
                 xp.setExperience(xp.getExperience() + exp, player);
                 pl.savePlayerData(player.getUniqueId(), xp);
@@ -244,14 +244,48 @@ public class Crate implements Listener {
 
                 loot1.addAll(Arrays.asList("MWC_BULLET9X19MM&40","MWC_BULLET9X18MM&38","MWC_BULLET45ACP&35"));
                 loot2.addAll(Arrays.asList("MWC_BULLET762X39&40","MWC_BULLET762X54&38","MWC_BULLET556X45&35","MWC_BULLET545X39&32"));
-                loot3.addAll(Arrays.asList("MWC_SV98&1"));
+                loot3.addAll(Arrays.asList("MWC_SV98MAG&2","MWC_SOCOM_MAG&2","MWC_M38MAG&2","MWC_M4A1MAG&2","MWC_AK74MAG&2","MWC_AK47MAG&2","MWC_AK47PMAGTAN&2","MWC_AK15MAG_2&2"));
                 l1 = getRandomItemWithChance(loot1, 0.1);
                 l2 = getRandomItemWithChance(loot2, 0.3);
-                l3 = getRandomItemWithChance(loot3, 0.9);
+                l3 = getRandomItemWithChance(loot3, 0.7);
                 giveItem(player, l1, l2, l3);
                 player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
+            case "MWC_VENDING_MACHINE":
+                exp = crate.get(name)*2;
+                xp = pl.loadPlayerData(player.getUniqueId(), null);
+                xp.setExperience(xp.getExperience() + exp, player);
+                pl.savePlayerData(player.getUniqueId(), xp);
 
+                System.out.println("Experience get= " + exp);
+                loot1.addAll(Arrays.asList("HARVESTCRAFT_SNICKERSBARITEM&2","HARVESTCRAFT_ENERGYDRINKITEM&2", "HARVESTCRAFT_CHOCOLATEMILKITEM&3"));
+                loot2.addAll(Arrays.asList("HBM_CANNED_TOMATO&1","HARVESTCRAFT_CRISPYRICEPUFFBARSITEM&1"));
+                loot3.addAll(Arrays.asList("HARVESTCRAFT_ENERGYDRINKITEM&2", "HARVESTCRAFT_BBQPOTATOCHIPSITEM&4"));
+                l1 = getRandomItemWithChance(loot1, 0.01);
+                l2 = getRandomItemWithChance(loot2, 0.2);
+                l3 = getRandomItemWithChance(loot3, 0.2);
+
+                giveItem(player, l1, l2, l3);
+                player.sendMessage("§b+ §e" + exp + " §6XP");
+                break;
+            case "MWC_TRASH_BIN":
+                exp = crate.get(name)*2;
+                xp = pl.loadPlayerData(player.getUniqueId(), null);
+                xp.setExperience(xp.getExperience() + exp, player);
+                pl.savePlayerData(player.getUniqueId(), xp);
+
+                System.out.println("Experience get= " + exp);
+
+                loot1.addAll(Arrays.asList("MINECRAFT_ROTTEN_FLESH&2","MINECRAFT_POISONOUS_POTATO&2", "HARVESTCRAFT_SWEETPICKLEITEM&3"));
+                loot2.addAll(Arrays.asList("HBM_CANNED_TOMATO&1","HARVESTCRAFT_ZOMBIEJERKYITEM&1"));
+                loot3.addAll(Arrays.asList("HARVESTCRAFT_ENERGYDRINKITEM&2", "HBM_WIRE_COPPER&4"));
+                l1 = getRandomItemWithChance(loot1, 0.01);
+                l2 = getRandomItemWithChance(loot2, 0.2);
+                l3 = getRandomItemWithChance(loot3, 0.8);
+
+                giveItem(player, l1, l2, l3);
+                player.sendMessage("§b+ §e" + exp + " §6XP");
+                break;
         }
     }
     private boolean hasEnoughSpace(Player player) {
@@ -315,6 +349,9 @@ public class Crate implements Listener {
         if (item.startsWith("HARVESTCRAFT_") || item.startsWith("MWC_") || item.startsWith("HBM_")|| item.startsWith("MINECRAFT_")) {
             item = item.split("_")[1];
             item = item.split("&") [0];
+            if (item.endsWith("ITEM")) {
+                item = item.split("ITEM") [0];
+            }
         }
         String[] parties = item.split("_");
         StringBuilder result = new StringBuilder();
