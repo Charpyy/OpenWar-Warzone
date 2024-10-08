@@ -72,39 +72,11 @@ public class Crate implements Listener {
         crate.put("HBM_RADIOREC", 12);
     }
 
-    @EventHandler
-    public void onLoot(PlayerInteractEvent event) {
-        Block block = event.getClickedBlock();
-        if (block == null) return;
-        String blockName = block.getType().toString();
-        if (!crate.containsKey(blockName)) return;
-        Player player = event.getPlayer();
-        Location blockLocation = block.getLocation();
-        if (crateCooldowns.containsKey(blockLocation)) {
-            long timeLeft = (crateCooldowns.get(blockLocation) - System.currentTimeMillis()) / 1000;
-            if (timeLeft > 0) {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§f» §7You need to wait §c" + timeLeft + " §7seconds"));
-                return;
-            }
-        }
-        int cooldown = crate.get(blockName);
-        crateCooldowns.put(blockLocation, System.currentTimeMillis() + (cooldown * 60 * 1000L));
-        triggerLootAnimation(player, block);
-    }
-
-
-    public void triggerLootAnimation(Player player, Block block) {
-        canceled = false;
-        Location loc = player.getLocation();
-        animationLoot(player, loc);
-        if (!canceled) {
-            Bukkit.getScheduler().runTaskLater(main, () -> {
-                newCrateLoot(player, block.getType().toString());
-            }, 40L);
-        }
-    }
 
     private void newCrateLoot(Player player, String name) {
+        if (canceled) {
+            return;
+        }
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§8[§a✓§8]"));
         switch (name) {
             case "MWC_FRIDGE_CLOSED":
@@ -400,6 +372,38 @@ public class Crate implements Listener {
                 break;
         }
     }
+    @EventHandler
+    public void onLoot(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        if (block == null) return;
+        String blockName = block.getType().toString();
+        if (!crate.containsKey(blockName)) return;
+        Player player = event.getPlayer();
+        Location blockLocation = block.getLocation();
+        if (crateCooldowns.containsKey(blockLocation)) {
+            long timeLeft = (crateCooldowns.get(blockLocation) - System.currentTimeMillis()) / 1000;
+            if (timeLeft > 0) {
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§f» §7You need to wait §c" + timeLeft + " §7seconds"));
+                return;
+            }
+        }
+        int cooldown = crate.get(blockName);
+        crateCooldowns.put(blockLocation, System.currentTimeMillis() + (cooldown * 60 * 1000L));
+        triggerLootAnimation(player, block);
+    }
+
+
+    public void triggerLootAnimation(Player player, Block block) {
+        canceled = false;
+        Location loc = player.getLocation();
+        animationLoot(player, loc);
+        if (!canceled) {
+            Bukkit.getScheduler().runTaskLater(main, () -> {
+                newCrateLoot(player, block.getType().toString());
+            }, 40L);
+        }
+    }
+
     private boolean hasEnoughSpace(Player player) {
         int count = 0;
         ItemStack[] contents = player.getInventory().getContents();
@@ -413,10 +417,13 @@ public class Crate implements Listener {
 
 
     private void giveItem(Player player, String item1, String item2, String item3) {
+        if (canceled) {
+            return;
+        }
         List<String> items = new ArrayList<>(Arrays.asList(item1, item2, item3));
         Random random = new Random();
         for (int i = 2; i >= 0; i--) {
-            String name =  items.get(1);
+            String name =  items.get(i);
             ItemStack item = getItemStackFromString(name.split("&") [0]);
             if (items.get(i).equals("AIR")) {
                 continue;
@@ -441,6 +448,7 @@ public class Crate implements Listener {
                 player.sendMessage("§b+ §6"+amoney +"§e$");
                 continue;
             }
+
             int amount = Integer.parseInt((name.split("&") [1]));
             System.out.println("Amount : "+amount);
             System.out.println("Item: "+item);
@@ -453,10 +461,12 @@ public class Crate implements Listener {
                     player.getInventory().addItem(item);
                     continue;
                 }
-                int randomItem = random.nextInt((amount) + 1);
-                System.out.println("Quantité item = "+randomItem);
-                for (int j = 0; j <= randomItem ; j++) {
-                    player.getInventory().addItem(item);
+                int randomItem = random.nextInt(amount + 1);
+                if (randomItem > 0) {
+                    player.sendMessage("§b+ §8" + randomItem + " §7" + changeName(items.get(i)));
+                    for (int j = 0; j < randomItem; j++) {
+                        player.getInventory().addItem(item);
+                    }
                 }
                 player.sendMessage("§b+ §8"+randomItem +" §7" + changeName(items.get(i)));
             } else {
@@ -490,7 +500,8 @@ public class Crate implements Listener {
         if (random.nextDouble() < airChance) {
             return "AIR";
         }
-        return loot.get(random.nextInt(loot.size()));
+        String selectedItem = loot.remove(random.nextInt(loot.size()));
+        return selectedItem;
     }
 
 
