@@ -442,7 +442,17 @@ public class Crate implements Listener {
                 continue;
             }
             int amount = Integer.parseInt((name.split("&") [1]));
+            System.out.println("Amount : "+amount);
+            System.out.println("Item: "+item);
+            if (amount == 0) {
+                continue;
+            }
             if (hasEnoughSpace(player)) {
+                if (amount == 1) {
+                    player.sendMessage("§b+ §81 §7" + changeName(items.get(i)));
+                    player.getInventory().addItem(item);
+                    continue;
+                }
                 int randomItem = random.nextInt((amount) + 1);
                 System.out.println("Quantité item = "+randomItem);
                 for (int j = 0; j <= randomItem ; j++) {
