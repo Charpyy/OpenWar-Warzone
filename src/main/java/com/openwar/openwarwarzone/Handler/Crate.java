@@ -1,6 +1,7 @@
 package com.openwar.openwarwarzone.Handler;
 
 import com.openwar.openwarlevels.level.PlayerDataManager;
+import com.openwar.openwarlevels.level.PlayerLevel;
 import com.openwar.openwarwarzone.Main;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -25,6 +26,15 @@ public class Crate implements Listener {
     private final Map<Location, Long> crateCooldowns;
     private JavaPlugin main;
     private boolean canceled;
+    List<String> loot1 = new ArrayList<>();
+    List<String> loot2 = new ArrayList<>();
+    List<String> loot3 = new ArrayList<>();
+    String l1 = "";
+    String l2 = "";
+    String l3 = "";
+    double exp;
+    PlayerLevel xp;
+
     public Crate(PlayerDataManager pl, Main main) {
         this.pl = pl;
         this.crate = new HashMap<>();
@@ -71,14 +81,13 @@ public class Crate implements Listener {
         if (crateCooldowns.containsKey(blockLocation)) {
             long timeLeft = (crateCooldowns.get(blockLocation) - System.currentTimeMillis()) / 1000;
             if (timeLeft > 0) {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§f» §7You need to wait §c"+timeLeft+" §7seconds"));
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§f» §7You need to wait §c" + timeLeft + " §7seconds"));
                 return;
             }
         }
         int cooldown = crate.get(blockName);
         crateCooldowns.put(blockLocation, System.currentTimeMillis() + (cooldown * 60 * 1000L));
         triggerLootAnimation(player, block);
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§8[§a✓§8]"));
     }
 
 
@@ -86,26 +95,52 @@ public class Crate implements Listener {
         canceled = false;
         Location loc = player.getLocation();
         animationLoot(player, loc);
-            if (!canceled) {
-                Bukkit.getScheduler().runTaskLater(main, () -> {
-                    newCrateLoot(player, block.getType().toString());
-                }, 40L);
-            }
+        if (!canceled) {
+            Bukkit.getScheduler().runTaskLater(main, () -> {
+                newCrateLoot(player, block.getType().toString());
+            }, 40L);
+        }
     }
 
     private void newCrateLoot(Player player, String name) {
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§8[§a✓§8]"));
         switch (name) {
             case "MWC_FRIDGE_CLOSED":
-                List<String> loot1 = new ArrayList<>();
-                List<String> loot2 = new ArrayList<>();
-                List<String> loot3 = new ArrayList<>();
-                loot1.addAll(Arrays.asList("HARVESTCRAFT_GUMMYBEARSITEM", "HARVESTCRAFT_FRUITPUNCHITEM","HARVESTCRAFT_PERSIMMONYOGURTITEM"));
-                loot2.addAll(Arrays.asList("HARVESTCRAFT_FOOTLONGITEM","HARVESTCRAFT_GLISTENINGSALADITEM","HARVESTCRAFT_PADTHAIITEM","HARVESTCRAFT_PORKRINDSITEM"));
+                exp = crate.get(name);
+                xp = pl.loadPlayerData(player.getUniqueId(), null);
+                xp.setExperience(xp.getExperience() + exp, player);
+                pl.savePlayerData(player.getUniqueId(), xp);
+                System.out.println("Experience get= " + exp);
+
+                loot1.addAll(Arrays.asList("HARVESTCRAFT_GUMMYBEARSITEM", "HARVESTCRAFT_FRUITPUNCHITEM", "HARVESTCRAFT_PERSIMMONYOGURTITEM"));
+                loot2.addAll(Arrays.asList("HARVESTCRAFT_FOOTLONGITEM", "HARVESTCRAFT_GLISTENINGSALADITEM", "HARVESTCRAFT_PADTHAIITEM", "HARVESTCRAFT_PORKRINDSITEM"));
                 loot3.addAll(Arrays.asList("MWC_M17"));
-                String l1 = getRandomItemWithChance(loot1, 0.01);
-                String l2 = getRandomItemWithChance(loot2, 0.2);
-                String l3 = getRandomItemWithChance(loot3, 0.9);
+
+                l1 = getRandomItemWithChance(loot1, 0.01);
+                l2 = getRandomItemWithChance(loot2, 0.2);
+                l3 = getRandomItemWithChance(loot3, 0.9);
+
                 giveItem(player, l1, l2, l3);
+                player.sendMessage("§b+ §e" + exp + " §6XP");
+                break;
+
+            case "MWC_FRIDGE_OPEN":
+                exp = crate.get(name);
+                xp = pl.loadPlayerData(player.getUniqueId(), null);
+                xp.setExperience(xp.getExperience() + exp, player);
+                pl.savePlayerData(player.getUniqueId(), xp);
+                System.out.println("Experience get= " + exp);
+
+                loot1.addAll(Arrays.asList("HARVESTCRAFT_GUMMYBEARSITEM&3", "HARVESTCRAFT_FRUITPUNCHITEM&1", "HARVESTCRAFT_PERSIMMONYOGURTITEM&1"));
+                loot2.addAll(Arrays.asList("HARVESTCRAFT_FOOTLONGITEM&1", "HARVESTCRAFT_GLISTENINGSALADITEM&1", "HARVESTCRAFT_PADTHAIITEM&1", "HARVESTCRAFT_PORKRINDSITEM&1"));
+                loot3.addAll(Arrays.asList("HARVESTCRAFT_ENERGYDRINKITEM&1","MWC_M17&1"));
+
+                l1 = getRandomItemWithChance(loot1, 0.01);
+                l2 = getRandomItemWithChance(loot2, 0.2);
+                l3 = getRandomItemWithChance(loot3, 0.9);
+
+                giveItem(player, l1, l2, l3);
+                player.sendMessage("§b+ §e" + exp + " §6XP");
                 break;
         }
     }
@@ -124,13 +159,18 @@ public class Crate implements Listener {
     private void giveItem(Player player, String item1, String item2, String item3) {
         List<String> items = new ArrayList<>(Arrays.asList(item1, item2, item3));
         for (int i = 2; i >= 0; i--) {
-            ItemStack item = getItemStackFromString(items.get(i));
+            String name =  items.get(1);
+            ItemStack item = getItemStackFromString(name.split("&") [0]);
             if (items.get(i).equals("AIR")) {
                 continue;
             }
+            int amount = Integer.parseInt((name.split("&") [1]));
+            System.out.println("Quantité item = "+amount);
             if (hasEnoughSpace(player)) {
-                player.getInventory().addItem(item);
-                player.sendMessage("§b+ §7" + changeName(items.get(i)));
+                for (int j = 0; j <= amount ; j++) {
+                    player.getInventory().addItem(item);
+                }
+                player.sendMessage("§b+ §8"+amount +" §7" + changeName(items.get(i)));
             } else {
                 player.getWorld().dropItemNaturally(player.getLocation(), item);
                 player.sendMessage("§c- §7" + changeName(items.get(i)) + " §8dropped on ground!");
@@ -142,6 +182,7 @@ public class Crate implements Listener {
     public String changeName(String item) {
         if (item.startsWith("HARVESTCRAFT_") || item.startsWith("MWC_") || item.startsWith("HBM_")) {
             item = item.split("_")[1];
+            item = item.split("&") [0];
         }
         String[] parties = item.split("_");
         StringBuilder result = new StringBuilder();
@@ -187,7 +228,7 @@ public class Crate implements Listener {
                 Location loc = player.getLocation();
                 double distance = loc1.distance(loc);
 
-                if (distance > 4D) {
+                if (distance > 3D) {
                     canceled = true;
                     player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§7- §cCancelled"));
                 } else {
