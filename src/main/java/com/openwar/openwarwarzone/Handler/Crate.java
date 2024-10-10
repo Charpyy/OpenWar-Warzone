@@ -224,7 +224,7 @@ public class Crate implements Listener {
                 giveItem(name, player, l1, l2, l3);
                 break;
             case "MWC_WEAPONS_CASE_SMALL":
-                loot1.addAll(Arrays.asList("MWC_APSMAG&2","MWC_MAKAROVMAG&2", "MWC_GLOCKMAG13&1"));
+                loot1.addAll(Arrays.asList("MWC_APSMAG_2&2","MWC_MAKAROVMAG&2", "MWC_GLOCKMAG13&1"));
                 loot2.addAll(Arrays.asList("MWC_MAKAROV_PM&1","MWC_APS&1","MWC_GLOCK_18C&1"));
                 loot3.addAll(Arrays.asList("MWC_SILENCER9MM&1"));
                 l1 = getRandomItemWithChance(loot1, 0.01);
@@ -322,7 +322,7 @@ public class Crate implements Listener {
         for (int i = 2; i >= 0; i--) {
             String name =  items.get(i);
             ItemStack item = getItemStackFromString(name.split("&") [0]);
-            if (items.get(i).equals("AIR")) {
+            if (name.equals("AIR")) {
                 continue;
             }
             if (items.get(i).equals("MONEY")) {
