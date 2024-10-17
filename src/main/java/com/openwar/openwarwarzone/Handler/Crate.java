@@ -80,6 +80,7 @@ public class Crate implements Listener {
         if (!looting) {
             Block block = event.getClickedBlock();
             if (block == null) return;
+            if (!block.getLocation().getWorld().getName().equals("warzone")) return;
             String blockName = block.getType().toString();
             if (!crate.containsKey(blockName)) return;
             if (crateLootPlayer.containsKey(block.getLocation())) return;
