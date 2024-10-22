@@ -9,17 +9,15 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.sql.Array;
 import java.util.*;
-import java.util.logging.Logger;
 
-public class LootCrate {
+public class LootCrate implements Listener{
     private final PlayerDataManager pl;
     private final Map<Location, Long> crateCooldowns;
     private final Map<Location, UUID> crateLootPlayer;
@@ -41,29 +39,29 @@ public class LootCrate {
     }
 
     private void loadCrates() {
-        crates.add(new Tuple<>("MWC_FRIDGE_CLOSED", 15, 6));
-        crates.add(new Tuple<>("MWC_FRIDGE_OPEN", 15, 6));
-        crates.add(new Tuple<>("MWC_FILINGCABINET_OPENED", 20, 2));
-        crates.add(new Tuple<>("MWC_FILINGCABINET", 20, 2));
-        crates.add(new Tuple<>("MWC_DUMPSTER", 10, 6));
+        crates.add(new Tuple<>("MWC_FRIDGE_CLOSED", 15, 9));
+        crates.add(new Tuple<>("MWC_FRIDGE_OPEN", 15, 9));
+        crates.add(new Tuple<>("MWC_FILINGCABINET_OPENED", 20, 9));
+        crates.add(new Tuple<>("MWC_FILINGCABINET", 20, 9));
+        crates.add(new Tuple<>("MWC_DUMPSTER", 10, 9));
         crates.add(new Tuple<>("MWC_WOODEN_CRATE_OPENED", 27, 18));
-        crates.add(new Tuple<>("CFM_COUNTER_DRAWER", 18, 2));
-        crates.add(new Tuple<>("CFM_BEDSIDE_CABINET_OAK", 18, 2));
-        crates.add(new Tuple<>("CFM_DESK_CABINET_OAK", 18, 2));
+        crates.add(new Tuple<>("CFM_COUNTER_DRAWER", 18, 9));
+        crates.add(new Tuple<>("CFM_BEDSIDE_CABINET_OAK", 18, 9));
+        crates.add(new Tuple<>("CFM_DESK_CABINET_OAK", 18, 9));
         crates.add(new Tuple<>("MWC_RUSSIAN_WEAPONS_CASE", 25, 18));
         crates.add(new Tuple<>("MWC_WEAPONS_CASE", 35, 18));
-        crates.add(new Tuple<>("MWC_AMMO_BOX", 15, 6));
-        crates.add(new Tuple<>("MWC_WEAPONS_CASE_SMALL", 23, 6));
+        crates.add(new Tuple<>("MWC_AMMO_BOX", 15, 9));
+        crates.add(new Tuple<>("MWC_WEAPONS_CASE_SMALL", 23, 9));
         crates.add(new Tuple<>("MWC_WEAPONS_LOCKER", 30, 18));
-        crates.add(new Tuple<>("MWC_MEDICAL_CRATE", 18, 6));
-        crates.add(new Tuple<>("MWC_TRASH_BIN", 12, 4));
-        crates.add(new Tuple<>("MWC_VENDING_MACHINE", 18, 2));
+        crates.add(new Tuple<>("MWC_MEDICAL_CRATE", 18, 9));
+        crates.add(new Tuple<>("MWC_TRASH_BIN", 12, 9));
+        crates.add(new Tuple<>("MWC_VENDING_MACHINE", 18, 9));
         crates.add(new Tuple<>("MWC_SUPPLY_DROP", 35, 27));
-        crates.add(new Tuple<>("MWC_SCP_LOCKER", 24, 3));
-        crates.add(new Tuple<>("MWC_LOCKER", 17, 3));
-        crates.add(new Tuple<>("MWC_ELECTRIC_BOX_OPENED", 10, 4));
-        crates.add(new Tuple<>("MWC_ELECTRIC_BOX", 10, 4));
-        crates.add(new Tuple<>("HBM_RADIOREC", 12, 2));
+        crates.add(new Tuple<>("MWC_SCP_LOCKER", 24, 9));
+        crates.add(new Tuple<>("MWC_LOCKER", 17, 9));
+        crates.add(new Tuple<>("MWC_ELECTRIC_BOX_OPENED", 10, 9));
+        crates.add(new Tuple<>("MWC_ELECTRIC_BOX", 10, 9));
+        crates.add(new Tuple<>("HBM_RADIOREC", 12, 9));
     }
 
 
@@ -73,20 +71,29 @@ public class LootCrate {
     public void onLoot(PlayerInteractEvent event) {
         if (event.getPlayer().getWorld().getName().equals("warzone")) {
             Block block = event.getClickedBlock();
-            if (block != null && crates.contains(block.getType().name())) {
-                Location crateLoc = block.getLocation();
-                Tuple<String, Integer, Integer> TriplesCouilles = null;
-                for (int i = 0; i < crates.size(); i++) {
-                    TriplesCouilles = crates.get(i);
-                }
-                if (TriplesCouilles != null) {
-                    if (crateInventory.containsKey(crateLoc)) {
-                        Inventory inv = crateInventory.get(crateLoc);
-                        event.getPlayer().openInventory(inv);
+            System.out.println("1");
+            if (block != null) {
+                boolean found = crates.stream().anyMatch(tuple -> tuple.getFirst().equals(block.getType().name()));
+                if (found) {
+                    System.out.println("2");
+                    Location crateLoc = block.getLocation();
+                    Tuple<String, Integer, Integer> TriplesCouilles = null;
+                    for (int i = 0; i < crates.size(); i++) {
+                        TriplesCouilles = crates.get(i);
+                        System.out.println("" + i);
                     }
-                    else {
-                        Map<ItemStack, Integer> loot = createLoot(TriplesCouilles);
-                        crateInventory.put(crateLoc, createGUI(loot, TriplesCouilles));
+                    if (TriplesCouilles != null) {
+                        System.out.println("3");
+                        if (crateInventory.containsKey(crateLoc)) {
+                            Inventory inv = crateInventory.get(crateLoc);
+                            System.out.println("4");
+                            event.getPlayer().openInventory(inv);
+                        } else {
+                            System.out.println("5");
+                            Map<ItemStack, Integer> loot = createLoot(TriplesCouilles);
+                            System.out.println("loot "+loot+ "  ");
+                            crateInventory.put(crateLoc, createGUI(loot, TriplesCouilles));
+                        }
                     }
                 }
             }
@@ -96,7 +103,7 @@ public class LootCrate {
     private Map<ItemStack, Integer> createLoot(Tuple<String, Integer, Integer> tuple) {
         String type = tuple.getFirst();
         List<Tuple<String, Integer, Integer>> items = new ArrayList<>();
-        Map<ItemStack, Integer> finalItem = new HashMap<>();
+        Map<ItemStack, Integer> finalItem;
         switch (type) {
             case "MWC_FRIDGE_CLOSED":
                 items.add(new Tuple<>("HARVESTCRAFT_GUMMYBEARSITEM", 3, 60));
@@ -109,7 +116,8 @@ public class LootCrate {
                 items.add(new Tuple<>("HARVESTCRAFT_GLISTENINGSALADITEM", 1, 50));
                 items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1, 30));
                 items.add(new Tuple<>("MWC_M17", 1, 5));
-                return finalItem = generateLoot(items, 2);
+                finalItem = generateLoot(items, 2);
+                return finalItem;
             case "":
 
                 return finalItem = generateLoot(items, 2);
@@ -120,55 +128,74 @@ public class LootCrate {
     private Map<ItemStack, Integer> generateLoot(List<Tuple<String, Integer, Integer>> items, int nb) {
         Random rand = new Random();
         Map<ItemStack, Integer> finalItem = new HashMap<>();
-        boolean isSelected = false;
-        //TODO YAURA QUUN SEUL ITEM IL FAUT FAIRE UNE BOUCLE FOR AVEC LE NOMBRE QUON VEUT  un randint en fonction du reste de la division du nb slot
-        nb = rand.nextInt(nb);
-        for (int x=0; x < nb ; nb++ ) {
+
+        nb = rand.nextInt(nb) + 1; 
+        for (int x = 0; x < nb; x++) {
+            boolean isSelected = false;
+
             while (!isSelected) {
                 int i = rand.nextInt(items.size());
                 Tuple<String, Integer, Integer> item = items.get(i);
                 isSelected = rand.nextInt(100) < item.getThird();
+
                 if (isSelected) {
                     if (item.getFirst().startsWith("MONEY")) {
                         finalItem.put(genMoney(), item.getSecond());
                     } else {
                         finalItem.put(getItemStackFromString(item.getFirst()), item.getSecond());
                     }
-                    return finalItem;
+                    System.out.println("GENERATING LOOT: " + finalItem);
                 }
             }
         }
-        return null;
+        return finalItem;
     }
 
     private Inventory createGUI(Map<ItemStack, Integer> loot, Tuple<String, Integer, Integer> crate) {
+        if (loot == null || crate == null) {
+            throw new IllegalArgumentException("Loot map or crate cannot be null.");
+        }
+
         Random random = new Random();
         String name = getDisName(crate.getFirst());
         Inventory gui = Bukkit.createInventory(null, crate.getThird(), "§7" + name);
+
+        Set<Integer> occupiedSlots = new HashSet<>();
+
         for (Map.Entry<ItemStack, Integer> entry : loot.entrySet()) {
             ItemStack item = entry.getKey();
-            item.setAmount(entry.getValue());
-            int slot = random.nextInt(crate.getThird());
+            if (item == null || entry.getValue() <= 0) {
+                continue;
+            }
+
+            final ItemStack finalItem = item.clone();
+            finalItem.setAmount(entry.getValue());
+
+            int slot;
+            do {
+                slot = random.nextInt(crate.getThird());
+            } while (occupiedSlots.contains(slot));
+
+            occupiedSlots.add(slot);
             gui.setItem(slot, new ItemStack(Material.WEB));
+
+            final int finalSlot = slot;
             Bukkit.getScheduler().runTaskLater(main, () -> {
-                gui.setItem(slot, item);
+                gui.setItem(finalSlot, finalItem);
             }, 40L);
         }
+
         return gui;
     }
 
     private String getDisName(String type) {
-        if (type.startsWith("MWC")) {
-            String[] names = type.toLowerCase().split("MWC_");
-            String name = names[1].replace("_", " ");
-            name = name.substring(0, 1).toUpperCase() + name.substring(1);
-            return name;
-        }
-        if (type.startsWith("HBM")) {
-            String[] names = type.toLowerCase().split("HBM_");
-            String name = names[1].replace("_", " ");
-            name = name.substring(0, 1).toUpperCase() + name.substring(1);
-            return name;
+        if (type.startsWith("MWC") || type.startsWith("HBM")) {
+            String[] names = type.toLowerCase().split("_");
+            if (names.length > 1) {
+                String name = names[1].replace("_", " ");
+                name = name.substring(0, 1).toUpperCase() + name.substring(1);
+                return name;
+            }
         }
         System.out.println("Error getDisName for type : " +type);
         return null;
