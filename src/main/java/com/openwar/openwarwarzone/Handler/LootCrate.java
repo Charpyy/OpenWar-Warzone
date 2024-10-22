@@ -109,37 +109,52 @@ public class LootCrate {
                 items.add(new Tuple<>("HARVESTCRAFT_GLISTENINGSALADITEM", 1, 50));
                 items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1, 30));
                 items.add(new Tuple<>("MWC_M17", 1, 5));
-                return finalItem = generateLoot(items);
+                return finalItem = generateLoot(items, 2);
             case "":
 
-                return finalItem = generateLoot(items);
+                return finalItem = generateLoot(items, 2);
         }
         return null;
     }
 
-    private Map<ItemStack, Integer> generateLoot(List<Tuple<String, Integer, Integer>> items) {
+    private Map<ItemStack, Integer> generateLoot(List<Tuple<String, Integer, Integer>> items, int nb) {
         Random rand = new Random();
         Map<ItemStack, Integer> finalItem = new HashMap<>();
         boolean isSelected = false;
         //TODO YAURA QUUN SEUL ITEM IL FAUT FAIRE UNE BOUCLE FOR AVEC LE NOMBRE QUON VEUT  un randint en fonction du reste de la division du nb slot
-        while (!isSelected) {
-            int i = rand.nextInt(items.size());
-            Tuple<String, Integer, Integer> item = items.get(i);
-            isSelected = rand.nextInt(100) < item.getThird();
-            if (isSelected) {
-                if (item.getFirst().startsWith("MONEY")) {
-                    finalItem.put(genMoney(), item.getSecond());
-                } else {
-                    finalItem.put(getItemStackFromString(item.getFirst()), item.getSecond());
+        nb = rand.nextInt(nb);
+        for (int x=0; x < nb ; nb++ ) {
+            while (!isSelected) {
+                int i = rand.nextInt(items.size());
+                Tuple<String, Integer, Integer> item = items.get(i);
+                isSelected = rand.nextInt(100) < item.getThird();
+                if (isSelected) {
+                    if (item.getFirst().startsWith("MONEY")) {
+                        finalItem.put(genMoney(), item.getSecond());
+                    } else {
+                        finalItem.put(getItemStackFromString(item.getFirst()), item.getSecond());
+                    }
+                    return finalItem;
                 }
-                return finalItem;
             }
         }
         return null;
     }
 
     private Inventory createGUI(Map<ItemStack, Integer> loot, Tuple<String, Integer, Integer> crate) {
-
+        Random random = new Random();
+        String name = getDisName(crate.getFirst());
+        Inventory gui = Bukkit.createInventory(null, crate.getThird(), "§7" + name);
+        for (Map.Entry<ItemStack, Integer> entry : loot.entrySet()) {
+            ItemStack item = entry.getKey();
+            item.setAmount(entry.getValue());
+            int slot = random.nextInt(crate.getThird());
+            gui.setItem(slot, new ItemStack(Material.WEB));
+            Bukkit.getScheduler().runTaskLater(main, () -> {
+                gui.setItem(slot, item);
+            }, 40L);
+        }
+        return gui;
     }
 
     private String getDisName(String type) {
