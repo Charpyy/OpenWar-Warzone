@@ -88,6 +88,7 @@ public class Crate implements Listener {
             Location blockLocation = block.getLocation();
             double distance = player.getLocation().distance(blockLocation);
             if (distance > 3D) { return;}
+            event.setCancelled(true);
             if (crateCooldowns.containsKey(blockLocation)) {
                 long timeLeft = (crateCooldowns.get(blockLocation) - System.currentTimeMillis()) / 1000;
                 if (timeLeft > 0) {
@@ -176,7 +177,7 @@ public class Crate implements Listener {
                 giveItem(name, player, l1, l2, l3);
                 break;
             case "MWC_WOODEN_CRATE_OPENED":
-                loot1.addAll(Arrays.asList("MWC_SV98MAG&2","MWC_SOCOM_MAG&2","MWC_M38MAG&2","MWC_M4A1MAG&2","MWC_AK74MAG&2","MWC_AK47MAG&2","MWC_AK47PMAGTAN&2","MWC_AK15MAG_2&2"));
+                loot1.addAll(Arrays.asList("MWC_SV98MAG&2","MWC_SOCOM_MAG&2","MWC_M38MAG&2","MWC_M4A1MAG_2&2","MWC_AK74MAG&2","MWC_AK47MAG&2","MWC_AK47PMAGTAN&2","MWC_AK15MAG_2&2"));
                 loot2.addAll(Arrays.asList("MWC_AK74&1","MWC_AK47&1","MWC_MAC10&1"));
                 loot3.addAll(Arrays.asList("MWC_MAC10MAG&3"));
                 l1 = getRandomItemWithChance(loot1, 0.3);
@@ -186,7 +187,7 @@ public class Crate implements Listener {
                 break;
             case "MWC_WEAPONS_CASE":
 
-                loot1.addAll(Arrays.asList("MWC_SV98MAG&2","MWC_SOCOM_MAG&2","MWC_M38MAG&2","MWC_M4A1MAG&2"));
+                loot1.addAll(Arrays.asList("MWC_SV98MAG&2","MWC_SOCOM_MAG&2","MWC_M38MAG&2","MWC_M4A1MAG_2&2"));
                 loot2.addAll(Arrays.asList("MWC_M38_DMR&1","MWC_M4A1&1"));
                 loot3.addAll(Arrays.asList("MWC_SV98&1"));
                 l1 = getRandomItemWithChance(loot1, 0.3);
@@ -197,7 +198,7 @@ public class Crate implements Listener {
             case "MWC_AMMO_BOX":
                 loot1.addAll(Arrays.asList("MWC_BULLET9X19MM&40","MWC_BULLET9X18MM&38","MWC_BULLET45ACP&35"));
                 loot2.addAll(Arrays.asList("MWC_BULLET762X39&40","MWC_BULLET762X54&38","MWC_BULLET556X45&35","MWC_BULLET545X39&32"));
-                loot3.addAll(Arrays.asList("MWC_SV98MAG&2","MWC_SOCOM_MAG&2","MWC_M38MAG&2","MWC_M4A1MAG&2","MWC_AK74MAG&2","MWC_AK47MAG&2","MWC_AK47PMAGTAN&2","MWC_AK15MAG_2&2"));
+                loot3.addAll(Arrays.asList("MWC_SV98MAG&2","MWC_SOCOM_MAG&2","MWC_M38MAG&2","MWC_M4A1MAG_2&2","MWC_AK74MAG&2","MWC_AK47MAG&2","MWC_AK47PMAGTAN&2","MWC_AK15MAG_2&2"));
                 l1 = getRandomItemWithChance(loot1, 0.1);
                 l2 = getRandomItemWithChance(loot2, 0.3);
                 l3 = getRandomItemWithChance(loot3, 0.7);
@@ -421,7 +422,7 @@ public class Crate implements Listener {
                 StringBuilder progressBar = new StringBuilder("§8§l‖ ");
                 for (int i = 0; i < 7; i++) {
                     if (i < progress) {
-                        player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0F, 1.0F);
+                        player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 0.3F, 1.0F);
                         progressBar.append("§c▌");
                     } else {
                         progressBar.append("§7▌");
@@ -446,7 +447,7 @@ public class Crate implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(main, 0, 5);
+        }.runTaskTimer(main, 0, 2);
     }
 
     public static ItemStack getItemStackFromString(String itemName) {
