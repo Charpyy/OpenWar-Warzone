@@ -3,6 +3,7 @@ package com.openwar.openwarwarzone;
 import com.openwar.openwarfaction.factions.FactionManager;
 import com.openwar.openwarlevels.level.PlayerDataManager;
 import com.openwar.openwarwarzone.Handler.Crate;
+import com.openwar.openwarwarzone.Handler.LootCrate;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,7 +28,7 @@ public final class Main extends JavaPlugin {
         System.out.println(" ");
         System.out.println(" OpenWar - Warzone loading...");
         if (!setupDepend()) {return;}
-        getServer().getPluginManager().registerEvents(new Crate(pl, this), this);
+        getServer().getPluginManager().registerEvents(new LootCrate(pl, this), this);
 
     }
 
