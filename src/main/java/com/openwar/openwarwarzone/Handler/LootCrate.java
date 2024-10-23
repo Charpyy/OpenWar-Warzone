@@ -13,6 +13,7 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -80,7 +81,7 @@ public class LootCrate implements Listener{
          }
      }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onLoot(PlayerInteractEvent event) {
         if (event.getPlayer().getWorld().getName().equals("warzone")) {
             Block block = event.getClickedBlock();
@@ -90,6 +91,7 @@ public class LootCrate implements Listener{
                         .filter(tuple -> tuple.getFirst().equals(block.getType().name()))
                         .findFirst();
                 if (found.isPresent()) {
+                    event.setCancelled(true);
                     Tuple<String, Integer, Integer> TriplesCouilles = found.get();
                     long cooldownTime = TriplesCouilles.getSecond() * 60 * 1000L;
                     long currentTime = System.currentTimeMillis();
