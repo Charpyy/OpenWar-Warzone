@@ -4,6 +4,8 @@ import com.openwar.openwarlevels.level.PlayerDataManager;
 import com.openwar.openwarlevels.level.PlayerLevel;
 import com.openwar.openwarwarzone.Main;
 import com.openwar.openwarwarzone.Utils.Tuple;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -22,9 +25,8 @@ import java.util.*;
 
 public class LootCrate implements Listener{
     private final PlayerDataManager pl;
-    private final Map<Location, Long> crateCooldowns;
-    private final Map<Location, UUID> crateLootPlayer;
     private final Map<Location, Inventory> crateInventory;
+    private Map<Location, Long> crateTimers = new HashMap<>();
     private JavaPlugin main;
 
     double exp;
@@ -34,8 +36,6 @@ public class LootCrate implements Listener{
 
     public LootCrate(PlayerDataManager pl, Main main) {
         this.pl = pl;
-        this.crateCooldowns = new HashMap<>();
-        this.crateLootPlayer = new HashMap<>();
         this.crateInventory = new HashMap<>();
         this.main = main;
         loadCrates();
@@ -68,7 +68,17 @@ public class LootCrate implements Listener{
     }
 
 
+     @EventHandler
+     public void onClose(InventoryCloseEvent event) {
+         if (event.getPlayer().getWorld().getName().equals("warzone")) {
+             if (event.getInventory().getName().contains("§8§l")) {
+                 ItemStack[] content = event.getInventory().getContents();
+                 if (content == null) {
 
+                 }
+             }
+         }
+     }
 
     @EventHandler
     public void onLoot(PlayerInteractEvent event) {
@@ -80,19 +90,39 @@ public class LootCrate implements Listener{
                         .filter(tuple -> tuple.getFirst().equals(block.getType().name()))
                         .findFirst();
                 if (found.isPresent()) {
-                Tuple<String, Integer, Integer> TriplesCouilles = found.get();
-                    if (crateInventory.containsKey(crateLoc)) {
-                        Inventory inv = crateInventory.get(crateLoc);
-                        event.getPlayer().openInventory(inv);
+                    Tuple<String, Integer, Integer> TriplesCouilles = found.get();
+                    long cooldownTime = TriplesCouilles.getSecond() * 60 * 1000L;
+                    long currentTime = System.currentTimeMillis();
+                    if (crateTimers.containsKey(crateLoc)) {
+                        long lastOpenTime = crateTimers.get(crateLoc);
+                        long timeSinceLastOpen = currentTime - lastOpenTime;
+                        if (timeSinceLastOpen >= cooldownTime) {
+                            regenerateCrate(event, crateLoc, TriplesCouilles);
                         } else {
-                        Map<ItemStack, Integer> loot = createLoot(TriplesCouilles);
-                        Inventory inv = createGUI(loot, TriplesCouilles);
-                        crateInventory.put(crateLoc, inv);
-                        event.getPlayer().openInventory(inv);
+                            if (crateInventory.containsKey(crateLoc)) {
+                                Inventory inv = crateInventory.get(crateLoc);
+                                ItemStack[] content = inv.getContents();
+                                if (content == null) {
+                                    event.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cX §7Empty"));
+                                } else {
+                                    event.getPlayer().openInventory(inv);
+                                }
+                            }
+                        }
+                    } else {
+                        regenerateCrate(event, crateLoc, TriplesCouilles);
                     }
                 }
             }
         }
+    }
+
+    private void regenerateCrate(PlayerInteractEvent event, Location crateLoc, Tuple<String, Integer, Integer> TriplesCouilles) {
+        Map<ItemStack, Integer> loot = createLoot(TriplesCouilles);
+        Inventory inv = createGUI(loot, TriplesCouilles);
+        crateInventory.put(crateLoc, inv);
+        crateTimers.put(crateLoc, System.currentTimeMillis());
+        event.getPlayer().openInventory(inv);
     }
 
     private Map<ItemStack, Integer> createLoot(Tuple<String, Integer, Integer> tuple) {
