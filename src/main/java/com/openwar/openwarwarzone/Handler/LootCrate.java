@@ -378,7 +378,7 @@ public class LootCrate implements Listener{
 
             occupiedSlots.add(slot);
 
-            ItemStack cobweb = new ItemStack(Material.COMMAND_MINECART);
+            ItemStack cobweb = new ItemStack(Material.BARRIER);
             ItemMeta cobwebMeta = cobweb.getItemMeta();
             cobwebMeta.setDisplayName("§7Searching...");
             cobwebMeta.setLore(Collections.singletonList("§8[§7     §8]"));
@@ -392,7 +392,7 @@ public class LootCrate implements Listener{
             @EventHandler
             public void onInventoryClick(InventoryClickEvent event) {
                 if (event.getInventory().equals(gui)) {
-                    if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.COMMAND_MINECART) {
+                    if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.BARRIER) {
                         event.setCancelled(true);
                     }
                 }
@@ -418,11 +418,11 @@ public class LootCrate implements Listener{
         finalItem.setAmount(getWeightedRandom(entry.getValue()));
 
         int slot = occupiedSlots.stream()
-                .filter(s -> gui.getItem(s) != null && gui.getItem(s).getType() == Material.COMMAND_MINECART)
+                .filter(s -> gui.getItem(s) != null && gui.getItem(s).getType() == Material.BARRIER)
                 .findFirst()
                 .orElse(-1);
 
-        ItemStack cobweb = new ItemStack(Material.COMMAND_MINECART);
+        ItemStack cobweb = new ItemStack(Material.BARRIER);
         ItemMeta cobwebMeta = cobweb.getItemMeta();
         cobwebMeta.setDisplayName("§7Searching...");
         StringBuilder progressBar = new StringBuilder("§8[§7     §8]");
