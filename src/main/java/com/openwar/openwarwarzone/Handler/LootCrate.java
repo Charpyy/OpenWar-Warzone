@@ -17,17 +17,23 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
+
 import java.util.*;
 
 public class LootCrate implements Listener{
     private final PlayerDataManager pl;
     private final Map<Location, Inventory> crateInventory;
     private Map<Location, Long> crateTimers = new HashMap<>();
+    private Map<Player, Integer> playerProgress = new HashMap<>();
+    private Map<Player, BukkitTask> activeTasks = new HashMap<>();
+    private Set<Player> playersWithOpenInventory = new HashSet<>();
     private JavaPlugin main;
 
     double exp;
@@ -69,17 +75,6 @@ public class LootCrate implements Listener{
     }
 
 
-     @EventHandler
-     public void onClose(InventoryCloseEvent event) {
-         if (event.getPlayer().getWorld().getName().equals("warzone")) {
-             if (event.getInventory().getName().contains("§8§l")) {
-                 ItemStack[] content = event.getInventory().getContents();
-                 if (content == null) {
-
-                 }
-             }
-         }
-     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onLoot(PlayerInteractEvent event) {
@@ -121,7 +116,7 @@ public class LootCrate implements Listener{
 
     private void regenerateCrate(PlayerInteractEvent event, Location crateLoc, Tuple<String, Integer, Integer> TriplesCouilles) {
         Map<ItemStack, Integer> loot = createLoot(TriplesCouilles);
-        Inventory inv = createGUI(loot, TriplesCouilles);
+        Inventory inv = createGUI(loot, TriplesCouilles, event.getPlayer());
         crateInventory.put(crateLoc, inv);
         crateTimers.put(crateLoc, System.currentTimeMillis());
         event.getPlayer().openInventory(inv);
@@ -353,7 +348,7 @@ public class LootCrate implements Listener{
         return finalItem;
     }
 
-    private Inventory createGUI(Map<ItemStack, Integer> loot, Tuple<String, Integer, Integer> crate) {
+    private Inventory createGUI(Map<ItemStack, Integer> loot, Tuple<String, Integer, Integer> crate, Player player) {
         if (loot == null || crate == null) {
             throw new IllegalArgumentException("Loot map or crate cannot be null.");
         }
@@ -386,7 +381,10 @@ public class LootCrate implements Listener{
             gui.setItem(slot, cobweb);
         }
 
-        processNextItem(gui, lootList, crate, occupiedSlots, 0);
+        playerProgress.put(player, 0);
+        playersWithOpenInventory.add(player);
+
+        processNextItem(gui, lootList, crate, occupiedSlots, 0, player);
 
         Bukkit.getPluginManager().registerEvents(new Listener() {
             @EventHandler
@@ -397,12 +395,33 @@ public class LootCrate implements Listener{
                     }
                 }
             }
+
+            @EventHandler
+            public void onInventoryClose(InventoryCloseEvent event) {
+                if (event.getPlayer().equals(player) && event.getInventory().equals(gui)) {
+                    BukkitTask task = activeTasks.get(player);
+                    if (task != null) {
+                        task.cancel();
+                    }
+                    playersWithOpenInventory.remove(player);
+                }
+            }
+
+            @EventHandler
+            public void onInventoryOpen(InventoryOpenEvent event) {
+                if (event.getPlayer().equals(player) && event.getInventory().equals(gui)) {
+                    if (!playersWithOpenInventory.contains(player)) {
+                        int progress = playerProgress.getOrDefault(player, 0);
+                        playersWithOpenInventory.add(player);
+                        processNextItem(gui, lootList, crate, occupiedSlots, progress, player);
+                    }
+                }
+            }
         }, main);
 
         return gui;
     }
-
-    private void processNextItem(Inventory gui, List<Map.Entry<ItemStack, Integer>> lootList, Tuple<String, Integer, Integer> crate, Set<Integer> occupiedSlots, int currentIndex) {
+    private void processNextItem(Inventory gui, List<Map.Entry<ItemStack, Integer>> lootList, Tuple<String, Integer, Integer> crate, Set<Integer> occupiedSlots, int currentIndex, Player player) {
         if (currentIndex >= lootList.size()) {
             return;
         }
@@ -410,7 +429,7 @@ public class LootCrate implements Listener{
         Map.Entry<ItemStack, Integer> entry = lootList.get(currentIndex);
         ItemStack item = entry.getKey();
         if (item == null || entry.getValue() <= 0) {
-            processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1);
+            processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1, player);
             return;
         }
 
@@ -431,12 +450,16 @@ public class LootCrate implements Listener{
         gui.setItem(slot, cobweb);
 
         final int finalSlot = slot;
-        Bukkit.getScheduler().runTaskLater(main, new Runnable() {
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(main, new Runnable() {
             int progress = 0;
             final int maxProgress = 5;
 
             @Override
             public void run() {
+                if (!playersWithOpenInventory.contains(player)) {
+                    return;
+                }
+
                 if (progress < maxProgress) {
                     progress++;
 
@@ -455,8 +478,8 @@ public class LootCrate implements Listener{
                     gui.setItem(finalSlot, cobweb);
 
                     Bukkit.getScheduler().runTask(main, () -> {
-                        for (Player player : Bukkit.getOnlinePlayers()) {
-                            player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 0.4f, 1.0f);
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            p.playSound(p.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 0.4f, 1.0f);
                         }
                     });
 
@@ -464,15 +487,17 @@ public class LootCrate implements Listener{
                 } else {
                     gui.setItem(finalSlot, finalItem);
                     Bukkit.getScheduler().runTaskLater(main, () -> {
-                        processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1);
+                        playerProgress.put(player, currentIndex + 1);
+                        processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1, player);
                     }, 5L);
                 }
             }
         }, 5L);
-    }
 
+        activeTasks.put(player, task);
+    }
     private String getDisName(String type) {
-        if (type.startsWith("MWC") || type.startsWith("HBM")) {
+        if (type.startsWith("MWC") || type.startsWith("HBM") || type.startsWith("CFM")) {
             String[] names = type.toLowerCase().split("_");
             if (names.length > 1) {
                 String name = names[1].replace("_", " ");
