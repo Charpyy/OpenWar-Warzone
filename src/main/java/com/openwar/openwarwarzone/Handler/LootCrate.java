@@ -212,8 +212,8 @@ public class LootCrate implements Listener{
                 items.add(new Tuple<>("MWC_M38MAG_2", 2, 50 ));
                 items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 60 ));
                 items.add(new Tuple<>("MWC_M38_DMR", 1, 30));
-                items.add(new Tuple<>("MWC_M4A1&1", 1, 40));
-                items.add(new Tuple<>("MWC_SV98&1", 1 , 10));
+                items.add(new Tuple<>("MWC_M4A1", 1, 40));
+                items.add(new Tuple<>("MWC_SV98", 1 , 10));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_AMMO_BOX":
