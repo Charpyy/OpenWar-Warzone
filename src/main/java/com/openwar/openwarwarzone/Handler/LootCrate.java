@@ -4,6 +4,7 @@ import com.openwar.openwarlevels.level.PlayerDataManager;
 import com.openwar.openwarlevels.level.PlayerLevel;
 import com.openwar.openwarwarzone.Main;
 import com.openwar.openwarwarzone.Utils.Tuple;
+import javafx.util.Pair;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -25,9 +26,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.AbstractMap.SimpleEntry;
+
 import java.util.*;
 
-public class LootCrate implements Listener{
+public class LootCrate implements Listener {
     private final PlayerDataManager pl;
     private final Map<Location, Inventory> crateInventory;
     private Map<Location, Long> crateTimers = new HashMap<>();
@@ -72,8 +75,8 @@ public class LootCrate implements Listener{
         crates.add(new Tuple<>("MWC_ELECTRIC_BOX_OPENED", 10, 9));
         crates.add(new Tuple<>("MWC_ELECTRIC_BOX", 10, 9));
         crates.add(new Tuple<>("HBM_RADIOREC", 12, 9));
+        crates.add(new Tuple<>("HBM_SAFE", 1, 27));
     }
-
 
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -94,12 +97,25 @@ public class LootCrate implements Listener{
                         long lastOpenTime = crateTimers.get(crateLoc);
                         long timeSinceLastOpen = currentTime - lastOpenTime;
                         if (timeSinceLastOpen >= cooldownTime) {
-                            regenerateCrate(event, crateLoc, TriplesCouilles);
+                            boolean isSafe = false;
+                            if (block.getType().name().equals("HBM_SAFE")) {
+                                isSafe = true;
+                                Bukkit.broadcastMessage("§8» §4Warzone §8« §f"+event.getPlayer().getName()+" §cis looting the Safe");
+                            }
+                            regenerateCrate(event, crateLoc, TriplesCouilles, isSafe);
                         } else {
                             if (crateInventory.containsKey(crateLoc)) {
                                 Inventory inv = crateInventory.get(crateLoc);
-                                ItemStack[] content = inv.getContents();
-                                if (content == null) {
+                                ItemStack[] contents = inv.getContents();
+                                boolean isEmpty = true;
+                                for (ItemStack item : contents) {
+                                    if (item != null && item.getType() != Material.AIR && item.getAmount() > 0) {
+                                        isEmpty = false;
+                                        break;
+                                    }
+                                }
+
+                                if (isEmpty) {
                                     event.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cX §7Empty"));
                                 } else {
                                     event.getPlayer().openInventory(inv);
@@ -107,26 +123,31 @@ public class LootCrate implements Listener{
                             }
                         }
                     } else {
-                        regenerateCrate(event, crateLoc, TriplesCouilles);
+                        boolean isSafe = false;
+                        if (block.getType().name().equals("HBM_SAFE")) {
+                            isSafe = true;
+                            Bukkit.broadcastMessage("§8» §4Warzone §8« §f"+event.getPlayer().getName()+" §cis looting the Safe");
+                        }
+                        regenerateCrate(event, crateLoc, TriplesCouilles, isSafe);
                     }
                 }
             }
         }
     }
 
-    private void regenerateCrate(PlayerInteractEvent event, Location crateLoc, Tuple<String, Integer, Integer> TriplesCouilles) {
-        Map<ItemStack, Integer> loot = createLoot(TriplesCouilles);
-        Inventory inv = createGUI(loot, TriplesCouilles, event.getPlayer());
+    private void regenerateCrate(PlayerInteractEvent event, Location crateLoc, Tuple<String, Integer, Integer> TriplesCouilles, boolean isSafe) {
+        List<SimpleEntry<ItemStack, Integer>> loot = createLoot(TriplesCouilles);
+        Inventory inv = createGUI(loot, TriplesCouilles, event.getPlayer(), isSafe);
         crateInventory.put(crateLoc, inv);
         crateTimers.put(crateLoc, System.currentTimeMillis());
         event.getPlayer().openInventory(inv);
     }
 
-    private Map<ItemStack, Integer> createLoot(Tuple<String, Integer, Integer> tuple) {
+    private List<SimpleEntry<ItemStack, Integer>> createLoot(Tuple<String, Integer, Integer> tuple) {
         String type = tuple.getFirst();
-        System.out.println("type: "+type);
+        System.out.println("type: " + type);
         List<Tuple<String, Integer, Integer>> items = new ArrayList<>();
-        Map<ItemStack, Integer> finalItem;
+        List<SimpleEntry<ItemStack, Integer>> finalItem;
         switch (type) {
             case "MWC_FRIDGE_CLOSED":
                 items.add(new Tuple<>("HARVESTCRAFT_GUMMYBEARSITEM", 3, 60));
@@ -156,22 +177,22 @@ public class LootCrate implements Listener{
                 return finalItem;
             case "MWC_FILINGCABINET":
                 items.add(new Tuple<>("MONEY", 1, 20));
-                items.add(new Tuple<>("MWC_BULLET44", 16 , 10));
-                items.add(new Tuple<>("MWC_BULLET45ACP", 18 , 20));
-                items.add(new Tuple<>("MWC_BULLET9X18MM", 12 , 50));
-                items.add(new Tuple<>("MWC_BULLET9X19MM", 14 , 60));
-                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1 , 50));
-                items.add(new Tuple<>("MWC_M17", 1 , 5));
+                items.add(new Tuple<>("MWC_BULLET44", 16, 10));
+                items.add(new Tuple<>("MWC_BULLET45ACP", 18, 20));
+                items.add(new Tuple<>("MWC_BULLET9X18MM", 12, 50));
+                items.add(new Tuple<>("MWC_BULLET9X19MM", 14, 60));
+                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1, 50));
+                items.add(new Tuple<>("MWC_M17", 1, 5));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_FILINGCABINET_OPENED":
                 items.add(new Tuple<>("MONEY", 1, 20));
-                items.add(new Tuple<>("MWC_BULLET44", 16 , 10));
-                items.add(new Tuple<>("MWC_BULLET45ACP", 18 , 20));
-                items.add(new Tuple<>("MWC_BULLET9X18MM", 12 , 50));
-                items.add(new Tuple<>("MWC_BULLET9X19MM", 14 , 60));
-                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1 , 50));
-                items.add(new Tuple<>("MWC_M17", 1 , 5));
+                items.add(new Tuple<>("MWC_BULLET44", 16, 10));
+                items.add(new Tuple<>("MWC_BULLET45ACP", 18, 20));
+                items.add(new Tuple<>("MWC_BULLET9X18MM", 12, 50));
+                items.add(new Tuple<>("MWC_BULLET9X19MM", 14, 60));
+                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1, 50));
+                items.add(new Tuple<>("MWC_M17", 1, 5));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_DUMPSTER":
@@ -193,27 +214,27 @@ public class LootCrate implements Listener{
                 items.add(new Tuple<>("MWC_BULLET556X45", 35, 50));
                 items.add(new Tuple<>("MWC_BULLET545X39", 32, 50));
                 items.add(new Tuple<>("MWC_SV98MAG_2", 2, 20));
-                items.add(new Tuple<>("MWC_SOCOM_MAG",2 , 30 ));
-                items.add(new Tuple<>("MWC_M38MAG_2", 2, 30 ));
-                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK74MAG", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK47MAG", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK15MAG_2", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK74", 1, 5 ));
-                items.add(new Tuple<>("MWC_AK47", 1, 5 ));
-                items.add(new Tuple<>("MWC_MAC10", 1, 15 ));
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 30));
+                items.add(new Tuple<>("MWC_M38MAG_2", 2, 30));
+                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 30));
+                items.add(new Tuple<>("MWC_AK74MAG", 2, 30));
+                items.add(new Tuple<>("MWC_AK47MAG", 2, 30));
+                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 30));
+                items.add(new Tuple<>("MWC_AK15MAG_2", 2, 30));
+                items.add(new Tuple<>("MWC_AK74", 1, 5));
+                items.add(new Tuple<>("MWC_AK47", 1, 5));
+                items.add(new Tuple<>("MWC_MAC10", 1, 15));
                 items.add(new Tuple<>("MWC_MAC10MAG", 3, 25));
                 finalItem = generateLoot(items, 3);
                 return finalItem;
             case "MWC_WEAPONS_CASE":
-                items.add(new Tuple<>("MWC_SOCOM_MAG",2 , 45 ));
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 45));
                 items.add(new Tuple<>("MWC_SV98MAG_2", 2, 40));
-                items.add(new Tuple<>("MWC_M38MAG_2", 2, 50 ));
-                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 60 ));
+                items.add(new Tuple<>("MWC_M38MAG_2", 2, 50));
+                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 60));
                 items.add(new Tuple<>("MWC_M38_DMR", 1, 30));
                 items.add(new Tuple<>("MWC_M4A1", 1, 40));
-                items.add(new Tuple<>("MWC_SV98", 1 , 10));
+                items.add(new Tuple<>("MWC_SV98", 1, 10));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_AMMO_BOX":
@@ -225,23 +246,23 @@ public class LootCrate implements Listener{
                 items.add(new Tuple<>("MWC_BULLET556X45", 35, 50));
                 items.add(new Tuple<>("MWC_BULLET545X39", 32, 50));
                 items.add(new Tuple<>("MWC_SV98MAG_2", 2, 20));
-                items.add(new Tuple<>("MWC_SOCOM_MAG",2 , 30 ));
-                items.add(new Tuple<>("MWC_M38MAG_2", 2, 30 ));
-                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK74MAG", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK47MAG", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 30 ));
-                items.add(new Tuple<>("MWC_AK15MAG_2", 2, 30 ));
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 30));
+                items.add(new Tuple<>("MWC_M38MAG_2", 2, 30));
+                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 30));
+                items.add(new Tuple<>("MWC_AK74MAG", 2, 30));
+                items.add(new Tuple<>("MWC_AK47MAG", 2, 30));
+                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 30));
+                items.add(new Tuple<>("MWC_AK15MAG_2", 2, 30));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_VENDING_MACHINE":
                 items.add(new Tuple<>("HARVESTCRAFT_SNICKERSBARITEM", 2, 40));
                 items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 2, 40));
                 items.add(new Tuple<>("HARVESTCRAFT_CHOCOLATEMILKITEM", 2, 30));
-                items.add(new Tuple<>("HBM_CANNED_TOMATO", 1 , 40));
+                items.add(new Tuple<>("HBM_CANNED_TOMATO", 1, 40));
                 items.add(new Tuple<>("HARVESTCRAFT_CRISPYRICEPUFFBARSITEM", 1, 45));
                 items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 2, 56));
-                items.add(new Tuple<>("HARVESTCRAFT_BBQPOTATOCHIPSITEM", 4 , 35));
+                items.add(new Tuple<>("HARVESTCRAFT_BBQPOTATOCHIPSITEM", 4, 35));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_TRASH_BIN":
@@ -258,76 +279,182 @@ public class LootCrate implements Listener{
             case "MWC_WEAPONS_CASE_SMALL":
                 items.add(new Tuple<>("MWC_APSMAG_2", 2, 30));
                 items.add(new Tuple<>("MWC_MAKAROVMAG", 2, 40));
-                items.add(new Tuple<>("MWC_GLOCKMAG13", 1 , 35));
+                items.add(new Tuple<>("MWC_GLOCKMAG13", 1, 35));
                 items.add(new Tuple<>("MWC_MAKAROV_PM", 1, 30));
-                items.add(new Tuple<>("MWC_APS", 1 , 20));
-                items.add(new Tuple<>("MWC_GLOCK_18C", 1 , 20));
-                items.add(new Tuple<>("MWC_SILENCER9MM", 1 , 10));
+                items.add(new Tuple<>("MWC_APS", 1, 20));
+                items.add(new Tuple<>("MWC_GLOCK_18C", 1, 20));
+                items.add(new Tuple<>("MWC_SILENCER9MM", 1, 10));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "CFM_COUNTER_DRAWER":
                 items.add(new Tuple<>("MONEY", 1, 20));
-                items.add(new Tuple<>("MWC_BULLET44", 16 , 10));
-                items.add(new Tuple<>("MWC_BULLET45ACP", 18 , 20));
-                items.add(new Tuple<>("MWC_BULLET9X18MM", 12 , 50));
-                items.add(new Tuple<>("MWC_BULLET9X19MM", 14 , 60));
-                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1 , 50));
-                items.add(new Tuple<>("MWC_M17", 1 , 5));
+                items.add(new Tuple<>("MWC_BULLET44", 16, 10));
+                items.add(new Tuple<>("MWC_BULLET45ACP", 18, 20));
+                items.add(new Tuple<>("MWC_BULLET9X18MM", 12, 50));
+                items.add(new Tuple<>("MWC_BULLET9X19MM", 14, 60));
+                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1, 50));
+                items.add(new Tuple<>("MWC_M17", 1, 5));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "CFM_BEDSIDE_CABINET_OAK":
                 items.add(new Tuple<>("MONEY", 1, 20));
-                items.add(new Tuple<>("MWC_BULLET44", 16 , 10));
-                items.add(new Tuple<>("MWC_BULLET45ACP", 18 , 20));
-                items.add(new Tuple<>("MWC_BULLET9X18MM", 12 , 50));
-                items.add(new Tuple<>("MWC_BULLET9X19MM", 14 , 60));
-                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1 , 50));
-                items.add(new Tuple<>("MWC_M17", 1 , 5));
+                items.add(new Tuple<>("MWC_BULLET44", 16, 10));
+                items.add(new Tuple<>("MWC_BULLET45ACP", 18, 20));
+                items.add(new Tuple<>("MWC_BULLET9X18MM", 12, 50));
+                items.add(new Tuple<>("MWC_BULLET9X19MM", 14, 60));
+                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1, 50));
+                items.add(new Tuple<>("MWC_M17", 1, 5));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "CFM_DESK_CABINET_OAK":
                 items.add(new Tuple<>("MONEY", 1, 20));
-                items.add(new Tuple<>("MWC_BULLET44", 16 , 10));
-                items.add(new Tuple<>("MWC_BULLET45ACP", 18 , 20));
-                items.add(new Tuple<>("MWC_BULLET9X18MM", 12 , 50));
-                items.add(new Tuple<>("MWC_BULLET9X19MM", 14 , 60));
-                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1 , 50));
-                items.add(new Tuple<>("MWC_M17", 1 , 5));
+                items.add(new Tuple<>("MWC_BULLET44", 16, 10));
+                items.add(new Tuple<>("MWC_BULLET45ACP", 18, 20));
+                items.add(new Tuple<>("MWC_BULLET9X18MM", 12, 50));
+                items.add(new Tuple<>("MWC_BULLET9X19MM", 14, 60));
+                items.add(new Tuple<>("HARVESTCRAFT_ENERGYDRINKITEM", 1, 50));
+                items.add(new Tuple<>("MWC_M17", 1, 5));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_RUSSIAN_WEAPONS_CASE":
-                items.add(new Tuple<>("MWC_AK74MAG", 2, 50 ));
-                items.add(new Tuple<>("MWC_AK47MAG", 2, 50 ));
-                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 50 ));
-                items.add(new Tuple<>("MWC_AK15MAG_2", 2, 35 ));
-                items.add(new Tuple<>("MWC_AK74", 1, 35 ));
-                items.add(new Tuple<>("MWC_AK47", 1, 45 ));
-                items.add(new Tuple<>("MWC_MAC10", 1, 55 ));
+                items.add(new Tuple<>("MWC_AK74MAG", 2, 50));
+                items.add(new Tuple<>("MWC_AK47MAG", 2, 50));
+                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 50));
+                items.add(new Tuple<>("MWC_AK15MAG_2", 2, 35));
+                items.add(new Tuple<>("MWC_AK74", 1, 35));
+                items.add(new Tuple<>("MWC_AK47", 1, 45));
+                items.add(new Tuple<>("MWC_MAC10", 1, 55));
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_SUPPLY_DROP":
                 items.add(new Tuple<>("MWC_ACOG", 1, 45));
                 items.add(new Tuple<>("MWC_MICROREFLEX", 1, 50));
                 items.add(new Tuple<>("MWC_SPECTER", 1, 50));
-                items.add(new Tuple<>("MWC_HOLOGRAPHIC2", 1 , 45));
+                items.add(new Tuple<>("MWC_HOLOGRAPHIC2", 1, 45));
                 items.add(new Tuple<>("MCHELI_FIM92", 1, 35));
-                items.add(new Tuple<>("MCHELI_FGM148", 1 , 35));
-                items.add(new Tuple<>("MWC_SOCOM_MAG",3 , 45 ));
+                items.add(new Tuple<>("MCHELI_FGM148", 1, 35));
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 3, 45));
                 items.add(new Tuple<>("MWC_SV98MAG_2", 3, 40));
-                items.add(new Tuple<>("MWC_M38MAG_2", 3, 50 ));
+                items.add(new Tuple<>("MWC_M38MAG_2", 3, 50));
                 items.add(new Tuple<>("MWC_M4A1MAG_2", 3, 60));
                 items.add(new Tuple<>("MWC_M38_DMR", 1, 30));
                 items.add(new Tuple<>("MWC_M4A1", 1, 40));
-                items.add(new Tuple<>("MWC_SV98", 1 , 20));
+                items.add(new Tuple<>("MWC_SV98", 1, 20));
                 finalItem = generateLoot(items, 4);
+                return finalItem;
+            case "MWC_SCP_LOCKER":
+                items.add(new Tuple<>("MWC_MOLLE_BLACK", 1, 40));
+                items.add(new Tuple<>("MWC_MOLLE_GREEN", 1, 40));
+                items.add(new Tuple<>("MWC_MOLLE_URBAN", 1, 40));
+                items.add(new Tuple<>("MWC_SWAT_VEST", 1, 10));
+                items.add(new Tuple<>("MWC_FLYYE_FIELD_COMPACT_PLATE_CARRIER", 1, 40));
+                items.add(new Tuple<>("MWC_M43A_CHEST_HARNESS", 1, 60));
+                items.add(new Tuple<>("MWC_DUFFLE_BAG", 1, 10));
+                items.add(new Tuple<>("MWC_TRU_SPEC_CORDURA_BACKPACK_FOREST", 1, 30));
+                items.add(new Tuple<>("MWC_TRU_SPEC_CORDURA_BACKPACK_BLACK", 1, 30));
+                items.add(new Tuple<>("MWC_ASSAULT_BACKPACK_FOREST", 1, 20));
+                items.add(new Tuple<>("MWC_ASSAULT_BACKPACK_BLACK", 1, 20));
+                items.add(new Tuple<>("MWC_COMBAT_SUSTAINMENT_BACKPACK_FOREST", 1, 30));
+                items.add(new Tuple<>("MWC_COMBAT_SUSTAINMENT_BACKPACK_BLACK", 1, 30));
+                items.add(new Tuple<>("MWC_ASSAULT_BACKPACK_TAN", 1, 20));
+                items.add(new Tuple<>("MWC_TRU_SPEC_CORDURA_BACKPACK_TAN", 1, 15));
+                items.add(new Tuple<>("MWC_F5_SWITCHBLADE_BACKPACK", 1, 20));
+                items.add(new Tuple<>("MWC_COMBAT_SUSTAINMENT_BACKPACK_TAN", 1, 30));
+                finalItem = generateLoot(items, 1);
+                return finalItem;
+            case "MWC_LOCKER":
+                items.add(new Tuple<>("MWC_SPEC_OPS_BOOTS", 1, 30));
+                items.add(new Tuple<>("MWC_SPEC_OPS_CHEST", 1, 30));
+                items.add(new Tuple<>("MWC_SPEC_OPS_HELMET", 1, 30));
+                items.add(new Tuple<>("MWC_MARINE_BOOTS", 1, 30));
+                items.add(new Tuple<>("MWC_MARINE_CHEST", 1, 30));
+                items.add(new Tuple<>("MWC_MARINE_HELMET", 1, 30));
+                items.add(new Tuple<>("MWC_SPETZNAZ_HELMET", 1, 30));
+                items.add(new Tuple<>("MWC_SPETZNAZ_CHEST", 1, 30));
+                items.add(new Tuple<>("MWC_SPETZNAZ_BOOTS", 1, 30));
+                items.add(new Tuple<>("MWC_URBAN_HELMET", 1, 30));
+                items.add(new Tuple<>("MWC_URBAN_CHEST", 1, 30));
+                items.add(new Tuple<>("MWC_URBAN_BOOTS", 1, 30));
+                items.add(new Tuple<>("MWC_BLACKCAMO_CHEST", 1, 30));
+                items.add(new Tuple<>("MWC_FOREST_CHEST", 1, 30));
+                items.add(new Tuple<>("MWC_BLACKJEANS_BOOTS", 1, 30));
+                items.add(new Tuple<>("MWC_KHAKIJEANS_BOOTS", 1, 30));
+                items.add(new Tuple<>("MWC_SWAT_CHEST", 1, 30));
+                items.add(new Tuple<>("MWC_SWAT_HELMET", 1, 30));
+                items.add(new Tuple<>("MWC_SWAT_BOOTS", 1, 30));
+                finalItem = generateLoot(items, 2);
+                return finalItem;
+            case "MWC_ELECTRIC_BOX_OPENED":
+                items.add(new Tuple<>("HBM_CIRCUIT_TARGETING_TIER2", 1, 10));
+                items.add(new Tuple<>("HBM_CIRCUIT_TARGETING_TIER1", 1, 20));
+                items.add(new Tuple<>("HBM_CIRCUIT_ALUMINIUM", 1, 20));
+                items.add(new Tuple<>("HBM_CIRCUIT_COPPER", 1, 10));
+                items.add(new Tuple<>("HBM_CIRCUIT_RAW", 1, 30));
+                items.add(new Tuple<>("HBM_MOTOR", 1, 10));
+                items.add(new Tuple<>("HBM_WIRE_TUNGSTEN", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_COPPER", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_ALUMINIUM", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_RED_COPPER", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_GOLD", 32, 60));
+                items.add(new Tuple<>("HBM_COIL_TUNGSTEN", 4, 50));
+                items.add(new Tuple<>("HBM_COIL_COPPER", 4, 50));
+                items.add(new Tuple<>("HBM_COIL_COPPER_TORUS", 2, 30));
+                finalItem = generateLoot(items, 2);
+                return finalItem;
+            case "HBM_RADIOREC":
+                items.add(new Tuple<>("HBM_CIRCUIT_TARGETING_TIER2", 1, 10));
+                items.add(new Tuple<>("HBM_CIRCUIT_TARGETING_TIER1", 1, 20));
+                items.add(new Tuple<>("HBM_CIRCUIT_ALUMINIUM", 1, 20));
+                items.add(new Tuple<>("HBM_CIRCUIT_COPPER", 1, 10));
+                items.add(new Tuple<>("HBM_CIRCUIT_RAW", 1, 30));
+                items.add(new Tuple<>("HBM_MOTOR", 1, 10));
+                items.add(new Tuple<>("HBM_WIRE_TUNGSTEN", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_COPPER", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_ALUMINIUM", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_RED_COPPER", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_GOLD", 32, 60));
+                items.add(new Tuple<>("HBM_COIL_TUNGSTEN", 4, 50));
+                items.add(new Tuple<>("HBM_COIL_COPPER", 4, 50));
+                items.add(new Tuple<>("HBM_COIL_COPPER TORUS", 2, 30));
+                finalItem = generateLoot(items, 2);
+                return finalItem;
+            case "MWC_ELECTRIC_BOX":
+                items.add(new Tuple<>("HBM_CIRCUIT_TARGETING_TIER2", 1, 10));
+                items.add(new Tuple<>("HBM_CIRCUIT_TARGETING_TIER1", 1, 20));
+                items.add(new Tuple<>("HBM_CIRCUIT_ALUMINIUM", 1, 20));
+                items.add(new Tuple<>("HBM_CIRCUIT_COPPER", 1, 10));
+                items.add(new Tuple<>("HBM_CIRCUIT_RAW", 1, 30));
+                items.add(new Tuple<>("HBM_MOTOR", 1, 10));
+                items.add(new Tuple<>("HBM_WIRE_TUNGSTEN", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_COPPER", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_ALUMINIUM", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_RED_COPPER", 32, 60));
+                items.add(new Tuple<>("HBM_WIRE_GOLD", 32, 60));
+                items.add(new Tuple<>("HBM_COIL_TUNGSTEN", 4, 50));
+                items.add(new Tuple<>("HBM_COIL_COPPER", 4, 50));
+                items.add(new Tuple<>("HBM_COIL_COPPER_TORUS", 2, 30));
+                finalItem = generateLoot(items, 2);
+                return finalItem;
+            case "HBM_SAFE":
+                items.add(new Tuple<>("MONEYSAFE", 1, 100));
+                items.add(new Tuple<>("MONEYSAFE", 1, 100));
+                items.add(new Tuple<>("MONEYSAFE", 1, 100));
+                items.add(new Tuple<>("MONEYSAFE", 1, 100));
+                items.add(new Tuple<>("MONEYSAFE", 2, 100));
+                items.add(new Tuple<>("GOLDMC", 1, 80));
+                items.add(new Tuple<>("GOLDMC", 2, 40));
+                items.add(new Tuple<>("GOLDMC", 3, 20));
+                items.add(new Tuple<>("MONEYSAFE", 4, 10));
+                finalItem = generateLoot(items, 8);
                 return finalItem;
         }
         return null;
     }
 
-    private Map<ItemStack, Integer> generateLoot(List<Tuple<String, Integer, Integer>> items, int nb) {
+
+    private List<SimpleEntry<ItemStack, Integer>> generateLoot(List<Tuple<String, Integer, Integer>> items, int nb) {
         Random rand = new Random();
-        Map<ItemStack, Integer> finalItem = new HashMap<>();
+        List<SimpleEntry<ItemStack, Integer>> finalItems = new ArrayList<>();
         nb = getWeightedRandom(nb);
         for (int x = 0; x < nb; x++) {
             boolean isSelected = false;
@@ -335,22 +462,31 @@ public class LootCrate implements Listener{
                 int i = rand.nextInt(items.size());
                 Tuple<String, Integer, Integer> item = items.get(i);
                 isSelected = rand.nextInt(100) < item.getThird();
+
                 if (isSelected) {
-                    if (item.getFirst().startsWith("MONEY")) {
-                        finalItem.put(genMoney(), item.getSecond());
-                    } else {
-                        finalItem.put(getItemStackFromString(item.getFirst()), item.getSecond());
+                    if (item.getFirst().startsWith("GOLDMC")) {
+                        finalItems.add(new SimpleEntry<>(genGold(), item.getSecond()));
+                        continue;
                     }
-                    System.out.println("GENERATING LOOT3: " + finalItem);
+                    if (item.getFirst().startsWith("MONEYSAFE")) {
+                        finalItems.add(new SimpleEntry<>(genMoneySafe(), item.getSecond()));
+                        continue;
+                    }
+                    if (item.getFirst().startsWith("MONEY")) {
+                        finalItems.add(new SimpleEntry<>(genMoney(), item.getSecond()));
+                        continue;
+                    } else {
+                        finalItems.add(new SimpleEntry<>(getItemStackFromString(item.getFirst()), item.getSecond()));
+                    }
                 }
             }
         }
-        return finalItem;
+        return finalItems;
     }
 
-    private Inventory createGUI(Map<ItemStack, Integer> loot, Tuple<String, Integer, Integer> crate, Player player) {
+    private Inventory createGUI(List<SimpleEntry<ItemStack, Integer>> loot, Tuple<String, Integer, Integer> crate, Player player, boolean isSafe) {
         if (loot == null || crate == null) {
-            throw new IllegalArgumentException("Loot map or crate cannot be null.");
+            throw new IllegalArgumentException("Loot list or crate cannot be null.");
         }
 
         Random random = new Random();
@@ -358,9 +494,8 @@ public class LootCrate implements Listener{
         Inventory gui = Bukkit.createInventory(null, crate.getThird(), "§8§l" + name);
 
         Set<Integer> occupiedSlots = new HashSet<>();
-        List<Map.Entry<ItemStack, Integer>> lootList = new ArrayList<>(loot.entrySet());
 
-        for (Map.Entry<ItemStack, Integer> entry : lootList) {
+        for (SimpleEntry<ItemStack, Integer> entry : loot) {
             ItemStack item = entry.getKey();
             if (item == null || entry.getValue() <= 0) {
                 continue;
@@ -383,8 +518,7 @@ public class LootCrate implements Listener{
 
         playerProgress.put(player, 0);
         playersWithOpenInventory.add(player);
-
-        processNextItem(gui, lootList, crate, occupiedSlots, 0, player);
+        processNextItem(gui, loot, crate, occupiedSlots, 0, player, isSafe);
 
         Bukkit.getPluginManager().registerEvents(new Listener() {
             @EventHandler
@@ -413,7 +547,7 @@ public class LootCrate implements Listener{
                     if (!playersWithOpenInventory.contains(player)) {
                         int progress = playerProgress.getOrDefault(player, 0);
                         playersWithOpenInventory.add(player);
-                        processNextItem(gui, lootList, crate, occupiedSlots, progress, player);
+                        processNextItem(gui, loot, crate, occupiedSlots, progress, player, isSafe);
                     }
                 }
             }
@@ -421,15 +555,15 @@ public class LootCrate implements Listener{
 
         return gui;
     }
-    private void processNextItem(Inventory gui, List<Map.Entry<ItemStack, Integer>> lootList, Tuple<String, Integer, Integer> crate, Set<Integer> occupiedSlots, int currentIndex, Player player) {
+    private void processNextItem(Inventory gui, List<SimpleEntry<ItemStack, Integer>> lootList, Tuple<String, Integer, Integer> crate, Set<Integer> occupiedSlots, int currentIndex, Player player, boolean isSafe) {
         if (currentIndex >= lootList.size()) {
             return;
         }
 
-        Map.Entry<ItemStack, Integer> entry = lootList.get(currentIndex);
+        SimpleEntry<ItemStack, Integer> entry = lootList.get(currentIndex);
         ItemStack item = entry.getKey();
         if (item == null || entry.getValue() <= 0) {
-            processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1, player);
+            processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1, player, isSafe);
             return;
         }
 
@@ -450,6 +584,8 @@ public class LootCrate implements Listener{
         gui.setItem(slot, cobweb);
 
         final int finalSlot = slot;
+        long delay = isSafe ? 40L : 5L;
+
         BukkitTask task = Bukkit.getScheduler().runTaskLater(main, new Runnable() {
             int progress = 0;
             final int maxProgress = 5;
@@ -483,19 +619,20 @@ public class LootCrate implements Listener{
                         }
                     });
 
-                    Bukkit.getScheduler().runTaskLater(main, this, 5L);
+                    Bukkit.getScheduler().runTaskLater(main, this, delay);
                 } else {
                     gui.setItem(finalSlot, finalItem);
                     Bukkit.getScheduler().runTaskLater(main, () -> {
                         playerProgress.put(player, currentIndex + 1);
-                        processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1, player);
-                    }, 5L);
+                        processNextItem(gui, lootList, crate, occupiedSlots, currentIndex + 1, player, isSafe);
+                    }, 1L);
                 }
             }
-        }, 5L);
+        }, delay);
 
         activeTasks.put(player, task);
     }
+
     private String getDisName(String type) {
         if (type.startsWith("MWC") || type.startsWith("HBM") || type.startsWith("CFM")) {
             String[] names = type.toLowerCase().split("_");
@@ -511,16 +648,48 @@ public class LootCrate implements Listener{
     public static ItemStack getItemStackFromString(String itemName) {
         Material material = Material.matchMaterial(itemName.toUpperCase());
         if (material == null) {
-            System.out.println("Error get Item Stack from sting with "+itemName);
+            System.out.println("Error get Item Stack from string with "+itemName);
             return new ItemStack(Material.AIR);
         }
         return new ItemStack(material);
     }
 
+    private ItemStack genMoneySafe() {
+        Random random = new Random();
+        int nb = random.nextInt(5);
+        nb = getWeightedRandom(nb);
+        int amoney = 0;
+        switch (nb) {
+            case 0:
+                amoney = 200;
+                break;
+            case 1:
+                amoney = 400;
+                break;
+            case 2:
+                amoney = 600;
+                break;
+            case 3:
+                amoney = 850;
+                break;
+            case 4:
+                amoney = 1000;
+                break;
+            case 5:
+                amoney = 1500;
+                break;
+        }
+        ItemStack money = new ItemStack(Material.matchMaterial("openwarprops:money"));
+        ItemMeta meta = money.getItemMeta();
+        meta.setLore(Arrays.asList("§7$"+amoney));
+        meta.setDisplayName("§6Money");
+        money.setItemMeta(meta);
+        return money;
+    }
     private ItemStack genMoney() {
         Random random = new Random();
         int choice = random.nextInt(3);
-        int amoney = 100;
+        int amoney = 200;
         if (choice == 0) {
             amoney = 50;
         } else if (choice == 1) {
@@ -535,7 +704,19 @@ public class LootCrate implements Listener{
         money.setItemMeta(meta);
         return money;
     }
+    private ItemStack genGold() {
+        ItemStack gold = new ItemStack(Material.GOLD_INGOT);
+        ItemMeta meta = gold.getItemMeta();
+        meta.setLore(Arrays.asList("§eRare Loot"));
+        meta.setDisplayName("§6§lGold Ingot");
+        gold.setItemMeta(meta);
+        return gold;
+    }
+
     public static int getWeightedRandom(int nb) {
+        if (nb == 0){
+            return nb;
+        }
         int totalWeight = (nb * (nb + 1)) / 2;
         Random random = new Random();
         int randomNumber = random.nextInt(totalWeight);
