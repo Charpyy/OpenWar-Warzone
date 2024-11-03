@@ -29,11 +29,6 @@ public final class Main extends JavaPlugin {
         System.out.println("====================================");
         System.out.println(" ");
         System.out.println(" OpenWar - Warzone loading...");
-        if (!NBT.preloadApi()) {
-            getLogger().warning("NBT-API wasn't initialized properly, disabling the plugin");
-            getPluginLoader().disablePlugin(this);
-            return;
-        }
         if (!setupDepend()) {return;}
         getServer().getPluginManager().registerEvents(new LootCrate(pl, this), this);
         getServer().getPluginManager().registerEvents(new AllowedCommands(), this);
