@@ -2,6 +2,3 @@ name: OpenWar-Warzone
 version: '${project.version}'
 main: com.openwar.openwarwarzone.Main
 depend: [OpenWar-Core]
-commands:
-  debugitem:
-    description: "Affiche les métadonnées et les données NBT de l'item."

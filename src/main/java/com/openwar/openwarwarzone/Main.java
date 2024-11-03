@@ -2,7 +2,6 @@ package com.openwar.openwarwarzone;
 
 import com.openwar.openwarfaction.factions.FactionManager;
 import com.openwar.openwarlevels.level.PlayerDataManager;
-import com.openwar.openwarwarzone.Commands.CommandDebugItems;
 import com.openwar.openwarwarzone.Handler.AllowedCommands;
 import com.openwar.openwarwarzone.Handler.Crate;
 import com.openwar.openwarwarzone.Handler.LootCrate;
@@ -38,7 +37,6 @@ public final class Main extends JavaPlugin {
         if (!setupDepend()) {return;}
         getServer().getPluginManager().registerEvents(new LootCrate(pl, this), this);
         getServer().getPluginManager().registerEvents(new AllowedCommands(), this);
-        getCommand("debugitem").setExecutor(new CommandDebugItems());
     }
 
     @Override
