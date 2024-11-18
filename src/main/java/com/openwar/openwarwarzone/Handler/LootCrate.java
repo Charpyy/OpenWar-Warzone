@@ -149,6 +149,30 @@ public class LootCrate implements Listener {
         List<Tuple<String, Integer, Integer>> items = new ArrayList<>();
         List<SimpleEntry<ItemStack, Integer>> finalItem;
         switch (type) {
+            case "MWC_MEDICAL_CRATE":
+                items.add(new Tuple<>("HBM_SYRINGE_METAL_STIMPAK", 2, 60));
+                items.add(new Tuple<>("HBM_SYRINGE_METAL_SUPER", 2, 25));
+                items.add(new Tuple<>("HBM_MED BAG", 2, 10));
+                items.add(new Tuple<>("HBM_RADAWAY", 2, 45));
+                items.add(new Tuple<>("HBM_RADAWAY_STRONG", 2, 25));
+                items.add(new Tuple<>("HBM_RADAWAY_FLUSH", 2, 10));
+                items.add(new Tuple<>("HBM_RADX", 2, 25));
+                finalItem = generateLoot(items, 2);
+                return finalItem;
+            case "MWC_WEAPONS_LOCKER":
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 45));
+                items.add(new Tuple<>("MWC_SV98MAG_2", 2, 40));
+                items.add(new Tuple<>("MWC_M38MAG_2", 2, 50));
+                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 60));
+                items.add(new Tuple<>("MWC_M38_DMR", 1, 30));
+                items.add(new Tuple<>("MWC_M4A1", 1, 40));
+                items.add(new Tuple<>("MWC_SV98", 1, 10));
+                items.add(new Tuple<>("MWC_ACOG", 1, 45));
+                items.add(new Tuple<>("MWC_MICROREFLEX", 1, 50));
+                items.add(new Tuple<>("MWC_SPECTER", 1, 50));
+                items.add(new Tuple<>("MWC_HOLOGRAPHIC2", 1, 45));
+                finalItem = generateLoot(items, 3);
+                return finalItem;
             case "MWC_FRIDGE_CLOSED":
                 items.add(new Tuple<>("HARVESTCRAFT_GUMMYBEARSITEM", 3, 60));
                 items.add(new Tuple<>("HARVESTCRAFT_FRUITPUNCHITEM", 1, 50));
