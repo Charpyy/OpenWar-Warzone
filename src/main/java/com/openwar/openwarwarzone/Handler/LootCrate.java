@@ -75,7 +75,7 @@ public class LootCrate implements Listener {
         crates.add(new Tuple<>("MWC_ELECTRIC_BOX_OPENED", 10, 9));
         crates.add(new Tuple<>("MWC_ELECTRIC_BOX", 10, 9));
         crates.add(new Tuple<>("HBM_RADIOREC", 12, 9));
-        crates.add(new Tuple<>("HBM_SAFE", 1, 27));
+        crates.add(new Tuple<>("HBM_SAFE", 45, 27));
     }
 
 
