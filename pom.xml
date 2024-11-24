@@ -41,7 +41,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>de.tr7zw.changeme.nbtapi</pattern>
-                                    <shadedPattern>com.openwar.warzone.nbtapi</shadedPattern> <!-- Remplacez par votre propre package -->
+                                    <shadedPattern>com.openwar.warzone.nbtapi</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
