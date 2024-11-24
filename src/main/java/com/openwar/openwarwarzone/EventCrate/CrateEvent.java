@@ -57,7 +57,7 @@ public class CrateEvent {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onLoot(PlayerInteractEvent event) {
-        if (event.getPlayer().getWorld().getName().equals("warzone")) {
+        if (event.getPlayer().getWorld().getName().equals("fire")) {
             Block block = event.getClickedBlock();
             if (block != null) {
                 Location crateLoc = block.getLocation();
