@@ -160,10 +160,10 @@ public class LootCrate implements Listener {
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_WEAPONS_LOCKER":
-                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 45));
-                items.add(new Tuple<>("MWC_SV98MAG_2", 2, 40));
-                items.add(new Tuple<>("MWC_M38MAG_2", 2, 50));
-                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 60));
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 35));
+                items.add(new Tuple<>("MWC_SV98MAG_2", 2, 20));
+                items.add(new Tuple<>("MWC_M38MAG_2", 2, 30));
+                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 40));
                 items.add(new Tuple<>("MWC_M38_DMR", 1, 30));
                 items.add(new Tuple<>("MWC_M4A1", 1, 40));
                 items.add(new Tuple<>("MWC_SV98", 1, 10));
@@ -252,10 +252,10 @@ public class LootCrate implements Listener {
                 finalItem = generateLoot(items, 3);
                 return finalItem;
             case "MWC_WEAPONS_CASE":
-                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 45));
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 2, 35));
                 items.add(new Tuple<>("MWC_SV98MAG_2", 2, 40));
-                items.add(new Tuple<>("MWC_M38MAG_2", 2, 50));
-                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 60));
+                items.add(new Tuple<>("MWC_M38MAG_2", 2, 35));
+                items.add(new Tuple<>("MWC_M4A1MAG_2", 2, 40));
                 items.add(new Tuple<>("MWC_M38_DMR", 1, 30));
                 items.add(new Tuple<>("MWC_M4A1", 1, 40));
                 items.add(new Tuple<>("MWC_SV98", 1, 10));
@@ -302,7 +302,7 @@ public class LootCrate implements Listener {
                 return finalItem;
             case "MWC_WEAPONS_CASE_SMALL":
                 items.add(new Tuple<>("MWC_APSMAG_2", 2, 30));
-                items.add(new Tuple<>("MWC_MAKAROVMAG", 2, 40));
+                items.add(new Tuple<>("MWC_MAKAROVMAG", 2, 30));
                 items.add(new Tuple<>("MWC_GLOCKMAG13", 1, 35));
                 items.add(new Tuple<>("MWC_MAKAROV_PM", 1, 30));
                 items.add(new Tuple<>("MWC_APS", 1, 20));
@@ -341,9 +341,9 @@ public class LootCrate implements Listener {
                 finalItem = generateLoot(items, 2);
                 return finalItem;
             case "MWC_RUSSIAN_WEAPONS_CASE":
-                items.add(new Tuple<>("MWC_AK74MAG", 2, 50));
-                items.add(new Tuple<>("MWC_AK47MAG", 2, 50));
-                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 50));
+                items.add(new Tuple<>("MWC_AK74MAG", 2, 30));
+                items.add(new Tuple<>("MWC_AK47MAG", 2, 30));
+                items.add(new Tuple<>("MWC_AK47PMAGTAN", 2, 35));
                 items.add(new Tuple<>("MWC_AK15MAG_2", 2, 35));
                 items.add(new Tuple<>("MWC_AK74", 1, 35));
                 items.add(new Tuple<>("MWC_AK47", 1, 45));
@@ -357,10 +357,10 @@ public class LootCrate implements Listener {
                 items.add(new Tuple<>("MWC_HOLOGRAPHIC2", 1, 45));
                 items.add(new Tuple<>("MCHELI_FIM92", 1, 35));
                 items.add(new Tuple<>("MCHELI_FGM148", 1, 35));
-                items.add(new Tuple<>("MWC_SOCOM_MAG", 3, 45));
-                items.add(new Tuple<>("MWC_SV98MAG_2", 3, 40));
-                items.add(new Tuple<>("MWC_M38MAG_2", 3, 50));
-                items.add(new Tuple<>("MWC_M4A1MAG_2", 3, 60));
+                items.add(new Tuple<>("MWC_SOCOM_MAG", 3, 40));
+                items.add(new Tuple<>("MWC_SV98MAG_2", 3, 35));
+                items.add(new Tuple<>("MWC_M38MAG_2", 3, 40));
+                items.add(new Tuple<>("MWC_M4A1MAG_2", 3, 30));
                 items.add(new Tuple<>("MWC_M38_DMR", 1, 30));
                 items.add(new Tuple<>("MWC_M4A1", 1, 40));
                 items.add(new Tuple<>("MWC_SV98", 1, 20));
