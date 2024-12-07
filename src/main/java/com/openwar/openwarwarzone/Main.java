@@ -5,6 +5,7 @@ import com.openwar.openwarlevels.level.PlayerDataManager;
 import com.openwar.openwarwarzone.Handler.AllowedCommands;
 import com.openwar.openwarwarzone.Handler.Crate;
 import com.openwar.openwarwarzone.Handler.LootCrate;
+import com.openwar.openwarwarzone.WarzoneCTF.CTFHandler;
 import de.tr7zw.nbtapi.NBT;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,6 +31,7 @@ public final class Main extends JavaPlugin {
         System.out.println(" ");
         System.out.println(" OpenWar - Warzone loading...");
         if (!setupDepend()) {return;}
+        getServer().getPluginManager().registerEvents(new CTFHandler(fm, this), this);
         getServer().getPluginManager().registerEvents(new LootCrate(pl, this), this);
         getServer().getPluginManager().registerEvents(new AllowedCommands(), this);
     }
