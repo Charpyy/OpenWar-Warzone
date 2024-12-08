@@ -145,7 +145,6 @@ public class LootCrate implements Listener {
 
     private List<SimpleEntry<ItemStack, Integer>> createLoot(Tuple<String, Integer, Integer> tuple) {
         String type = tuple.getFirst();
-        System.out.println("type: " + type);
         List<Tuple<String, Integer, Integer>> items = new ArrayList<>();
         List<SimpleEntry<ItemStack, Integer>> finalItem;
         switch (type) {
