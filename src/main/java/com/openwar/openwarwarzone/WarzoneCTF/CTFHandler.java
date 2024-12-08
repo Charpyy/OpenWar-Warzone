@@ -26,7 +26,7 @@ public class CTFHandler implements Listener {
     private BukkitTask captureTask = null;
     private long lastPlayerInZoneTime = System.currentTimeMillis();
 
-    private static final long NEUTRALIZE_DELAY = 180_000; // 3 minutes in milliseconds
+    private static final long NEUTRALIZE_DELAY = 60_000; // 1 minute in milliseconds
     private static final int CAPTURE_PROGRESS_MAX = 100; // 100% capture progress
 
     public CTFHandler(FactionManager fm, Main main) {
@@ -43,15 +43,23 @@ public class CTFHandler implements Listener {
                 player.getLocation().getZ(),
                 2774D, 56D, 3085D, 2759D, 46D, 3115D)) {
 
-            Faction Faction = fm.getFactionByPlayer(player.getUniqueId());
-            String playerFaction = Faction.getName();
-            if (playerFaction == null) return;
-
+            Faction faction = fm.getFactionByPlayer(player.getUniqueId());
+            if (faction == null) return;
+            String playerFaction = faction.getName();
             factionPresence.put(playerFaction, factionPresence.getOrDefault(playerFaction, 0) + 1);
             lastPlayerInZoneTime = System.currentTimeMillis();
 
             if (captureTask == null) {
                 startCaptureTask();
+            }
+        } else {
+            Faction faction = fm.getFactionByPlayer(player.getUniqueId());
+            if (faction != null) {
+                String playerFaction = faction.getName();
+                factionPresence.put(playerFaction, factionPresence.getOrDefault(playerFaction, 0) - 1);
+                if (factionPresence.get(playerFaction) <= 0) {
+                    factionPresence.remove(playerFaction);
+                }
             }
         }
     }
@@ -60,6 +68,12 @@ public class CTFHandler implements Listener {
         captureTask = new BukkitRunnable() {
             @Override
             public void run() {
+                if (!arePlayersInRegion()) {
+                    resetCapture();
+                    cancel();
+                    return;
+                }
+
                 if (System.currentTimeMillis() - lastPlayerInZoneTime > NEUTRALIZE_DELAY) {
                     neutralizeZone();
                     cancel();
@@ -78,12 +92,12 @@ public class CTFHandler implements Listener {
                 if (currentFaction == null || !currentFaction.equals(leadingFaction)) {
                     if (leadingCount > competingCount) {
                         progress++;
-                        sendActionBarToPlayersInRegion("Progress: " + progress + "%");
+                        sendActionBarToPlayersInRegion("§8» §bProgress: §3" + progress + "§7%");
 
                         if (progress >= CAPTURE_PROGRESS_MAX) {
                             currentFaction = leadingFaction;
                             progress = 0;
-                            Bukkit.broadcastMessage(currentFaction + " has captured the zone!");
+                            Bukkit.broadcastMessage("§8» §4Warzone §8« §c" + currentFaction + " §7has captured the building!");
                             startFactionRewardTask();
                         }
                     } else {
@@ -91,7 +105,25 @@ public class CTFHandler implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(main, 20, 20);
+        }.runTaskTimer(main, 10, 10);
+    }
+
+    private boolean arePlayersInRegion() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (isPlayerInRegion(player.getLocation().getX(),
+                    player.getLocation().getY(),
+                    player.getLocation().getZ(),
+                    2774D, 56D, 3085D, 2759D, 46D, 3115D)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void resetCapture() {
+        captureTask = null;
+        progress = 0;
+        factionPresence.clear();
     }
 
     private Map.Entry<String, Integer> getStrongestFaction() {
@@ -101,10 +133,11 @@ public class CTFHandler implements Listener {
     }
 
     private void neutralizeZone() {
+        captureTask = null;
         currentFaction = null;
         progress = 0;
         factionPresence.clear();
-        Bukkit.broadcastMessage("The zone has been neutralized due to inactivity.");
+        Bukkit.broadcastMessage("§8» §4Warzone §8« §7The building has been neutralized.");
     }
 
     private void startFactionRewardTask() {
@@ -118,15 +151,12 @@ public class CTFHandler implements Listener {
 
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     Faction faction = fm.getFactionByPlayer(player.getUniqueId());
-                    String playerFaction = faction.getName();
-                    if (playerFaction != null && playerFaction.equals(currentFaction)) {
-                        // Give $300 to players in the current faction
-                        //TODO faire les récompense
-                        player.sendMessage("Your faction earned $300 for holding the zone!");
+                    if (faction != null && faction.getName().equals(currentFaction)) {
+                        player.sendMessage("§8» §bYou earn nothing holding this building ahah looser");
                     }
                 }
             }
-        }.runTaskTimer(main, 600, 600);
+        }.runTaskTimer(main, 1800, 1800);
     }
 
     private void sendActionBarToPlayersInRegion(String message) {
