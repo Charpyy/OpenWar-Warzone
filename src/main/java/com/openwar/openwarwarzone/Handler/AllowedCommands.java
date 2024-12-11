@@ -15,8 +15,7 @@ public class AllowedCommands implements Listener {
         String command = event.getMessage().toLowerCase();
         String worldName = player.getWorld().getName();
         if (worldName.equalsIgnoreCase("warzone")) {
-            if (command.startsWith("/f chat") || command.startsWith("/r") ||
-                    command.startsWith("/msg") || command.startsWith("/money")) {
+            if (command.contains("f chat") || command.contains("r") || command.contains("msg") || command.contains("money")) {
                 return;
             } else {
                 event.setCancelled(true);
