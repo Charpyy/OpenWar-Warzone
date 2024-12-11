@@ -5,7 +5,9 @@ import com.openwar.openwarfaction.factions.FactionManager;
 import com.openwar.openwarwarzone.Main;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,6 +21,7 @@ public class CTFHandler implements Listener {
 
     private FactionManager fm;
     private Main main;
+    private Economy economy;
 
     private String currentFaction = null;
     private Map<String, Integer> factionPresence = new HashMap<>();
@@ -29,9 +32,10 @@ public class CTFHandler implements Listener {
     private static final long NEUTRALIZE_DELAY = 60_000; // 1 minute in milliseconds
     private static final int CAPTURE_PROGRESS_MAX = 100; // 100% capture progress
 
-    public CTFHandler(FactionManager fm, Main main) {
+    public CTFHandler(FactionManager fm, Main main, Economy economy) {
         this.fm = fm;
         this.main = main;
+        this.economy = economy;
     }
 
     @EventHandler
@@ -71,12 +75,14 @@ public class CTFHandler implements Listener {
                 if (!arePlayersInRegion()) {
                     resetCapture();
                     cancel();
+                    System.out.println("RETURN1");
                     return;
                 }
 
                 if (System.currentTimeMillis() - lastPlayerInZoneTime > NEUTRALIZE_DELAY) {
                     neutralizeZone();
                     cancel();
+                    System.out.println("RETURN2");
                     return;
                 }
 
@@ -152,7 +158,8 @@ public class CTFHandler implements Listener {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     Faction faction = fm.getFactionByPlayer(player.getUniqueId());
                     if (faction != null && faction.getName().equals(currentFaction)) {
-                        player.sendMessage("§8» §bYou earn nothing holding this building ahah looser");
+                        economy.withdrawPlayer(player, 300);
+                        player.sendMessage("§8» §f+§6300$");
                     }
                 }
             }
