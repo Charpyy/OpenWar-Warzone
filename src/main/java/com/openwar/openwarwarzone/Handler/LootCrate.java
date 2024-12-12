@@ -1,10 +1,9 @@
 package com.openwar.openwarwarzone.Handler;
 
-import com.openwar.openwarlevels.level.PlayerDataManager;
+import com.openwar.openwarcore.Utils.LevelSaveAndLoadBDD;
 import com.openwar.openwarlevels.level.PlayerLevel;
 import com.openwar.openwarwarzone.Main;
 import com.openwar.openwarwarzone.Utils.Tuple;
-import javafx.util.Pair;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -31,7 +30,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 
 public class LootCrate implements Listener {
-    private final PlayerDataManager pl;
+    private final LevelSaveAndLoadBDD pl;
     private final Map<Location, Inventory> crateInventory;
     private Map<Location, Long> crateTimers = new HashMap<>();
     private Map<Player, Integer> playerProgress = new HashMap<>();
@@ -44,7 +43,7 @@ public class LootCrate implements Listener {
 
     List<Tuple<String, Integer, Integer>> crates = new ArrayList<>();
 
-    public LootCrate(PlayerDataManager pl, Main main) {
+    public LootCrate(LevelSaveAndLoadBDD pl, Main main) {
         this.pl = pl;
         this.crateInventory = new HashMap<>();
         this.main = main;
