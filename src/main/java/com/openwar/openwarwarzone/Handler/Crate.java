@@ -1,6 +1,6 @@
 package com.openwar.openwarwarzone.Handler;
 
-import com.openwar.openwarlevels.level.PlayerDataManager;
+import com.openwar.openwarcore.Utils.LevelSaveAndLoadBDD;
 import com.openwar.openwarlevels.level.PlayerLevel;
 import com.openwar.openwarwarzone.Main;
 import net.md_5.bungee.api.ChatMessageType;
@@ -23,7 +23,7 @@ import java.util.*;
 
 public class Crate implements Listener {
 
-    private final PlayerDataManager pl;
+    private final LevelSaveAndLoadBDD pl;
     private final Map<String, Integer> crate;
     private final Map<Location, Long> crateCooldowns;
     private final Map<Location, UUID> crateLootPlayer;
@@ -39,7 +39,7 @@ public class Crate implements Listener {
     double exp;
     PlayerLevel xp;
 
-    public Crate(PlayerDataManager pl, Main main) {
+    public Crate(LevelSaveAndLoadBDD pl, Main main) {
         this.pl = pl;
         this.crate = new HashMap<>();
         this.crateCooldowns = new HashMap<>();
@@ -312,7 +312,7 @@ public class Crate implements Listener {
         }
         System.out.println("CRATE: " +namee);
         exp = crate.get(namee)*2;
-        xp = pl.loadPlayerData(player.getUniqueId(), null);
+        xp = pl.loadPlayerData(player.getUniqueId());
         xp.setExperience(xp.getExperience() + exp, player);
         player.sendMessage("§b+ §e" + exp + " §6XP");
         pl.savePlayerData(player.getUniqueId(), xp);
