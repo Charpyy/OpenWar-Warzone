@@ -1,6 +1,6 @@
 package com.openwar.openwarwarzone.EventCrate;
 
-import com.openwar.openwarlevels.level.PlayerDataManager;
+import com.openwar.openwarcore.Utils.LevelSaveAndLoadBDD;
 import com.openwar.openwarlevels.level.PlayerLevel;
 import com.openwar.openwarwarzone.Main;
 import com.openwar.openwarwarzone.Utils.Tuple;
@@ -28,7 +28,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 public class CrateEvent {
-    private final PlayerDataManager pl;
+    private final LevelSaveAndLoadBDD pl;
     private final Map<Location, Inventory> crateInventory;
     private Map<Location, Long> crateTimers = new HashMap<>();
     private Map<Player, Integer> playerProgress = new HashMap<>();
@@ -41,7 +41,7 @@ public class CrateEvent {
 
     List<Tuple<String, Integer, Integer>> crates = new ArrayList<>();
 
-    public CrateEvent(PlayerDataManager pl, Main main) {
+    public CrateEvent(LevelSaveAndLoadBDD pl, Main main) {
         this.pl = pl;
         this.crateInventory = new HashMap<>();
         this.main = main;
