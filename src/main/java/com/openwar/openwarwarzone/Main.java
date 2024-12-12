@@ -1,7 +1,7 @@
 package com.openwar.openwarwarzone;
 
+import com.openwar.openwarcore.Utils.LevelSaveAndLoadBDD;
 import com.openwar.openwarfaction.factions.FactionManager;
-import com.openwar.openwarlevels.level.PlayerDataManager;
 import com.openwar.openwarwarzone.Handler.AllowedCommands;
 import com.openwar.openwarwarzone.Handler.LootCrate;
 import com.openwar.openwarwarzone.WarzoneCTF.CTFHandler;
@@ -10,12 +10,12 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin {
-    private PlayerDataManager pl;
+    private LevelSaveAndLoadBDD pl;
     private FactionManager fm;
     private Economy economy = null;
 
     private boolean setupDepend() {
-        RegisteredServiceProvider<PlayerDataManager> levelProvider = getServer().getServicesManager().getRegistration(PlayerDataManager.class);
+        RegisteredServiceProvider<LevelSaveAndLoadBDD> levelProvider = getServer().getServicesManager().getRegistration(LevelSaveAndLoadBDD.class);
         RegisteredServiceProvider<FactionManager> factionDataProvider = getServer().getServicesManager().getRegistration(FactionManager.class);
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (    levelProvider == null || factionDataProvider == null || rsp == null) {
