@@ -5,189 +5,102 @@ import com.openwar.openwarfaction.factions.FactionManager;
 import com.openwar.openwarwarzone.Main;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CTFHandler implements Listener {
 
-    private FactionManager fm;
-    private Main main;
-    private Economy economy;
+    private final Zone zone;
+    private final FactionCaptureManager manager;
+    private final FactionManager factionManager;
+    private final Main main;
+    private final Set<Player> playersInZone = new HashSet<>();
 
-    private String currentFaction = null;
-    private Map<String, Integer> factionPresence = new HashMap<>();
-    private int progress = 0;
-    private BukkitTask captureTask = null;
-    private long lastPlayerInZoneTime = System.currentTimeMillis();
+    private static final int TICK_INTERVAL = 20;
 
-    private static final long NEUTRALIZE_DELAY = 60_000; // 1 minute in milliseconds
-    private static final int CAPTURE_PROGRESS_MAX = 100; // 100% capture progress
-
-    public CTFHandler(FactionManager fm, Main main, Economy economy) {
-        this.fm = fm;
+    public CTFHandler(Zone zone, FactionCaptureManager manager, FactionManager factionManager, Main main) {
+        this.zone = zone;
+        this.manager = manager;
+        this.factionManager = factionManager;
         this.main = main;
-        this.economy = economy;
+
+        startCaptureTask();
     }
 
     @EventHandler
-    public void onPlayerCapture(PlayerMoveEvent pl) {
-        Player player = pl.getPlayer();
-        if (player.getWorld().getName().equals("warzone") && isPlayerInRegion(
-                player.getLocation().getX(),
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        boolean isInZone = zone.isPlayerInRegion(player.getLocation().getX(),
                 player.getLocation().getY(),
                 player.getLocation().getZ(),
-                2774D, 56D, 3085D, 2759D, 46D, 3115D)) {
+                2774D, 56D, 3085D, 2759D, 46D, 3115D);
 
-            Faction faction = fm.getFactionByPlayer(player.getUniqueId());
-            if (faction == null) return;
-            String playerFaction = faction.getName();
-            factionPresence.put(playerFaction, factionPresence.getOrDefault(playerFaction, 0) + 1);
-            lastPlayerInZoneTime = System.currentTimeMillis();
-
-            if (captureTask == null) {
-                startCaptureTask();
-            }
-        } else {
-            Faction faction = fm.getFactionByPlayer(player.getUniqueId());
-            if (faction != null) {
-                String playerFaction = faction.getName();
-                factionPresence.put(playerFaction, factionPresence.getOrDefault(playerFaction, 0) - 1);
-                if (factionPresence.get(playerFaction) <= 0) {
-                    factionPresence.remove(playerFaction);
-                }
-            }
+        if (isInZone && !playersInZone.contains(player)) {
+            playersInZone.add(player);
+            manager.handlePlayerEnter(player, factionManager);
+            sendActionBar(player, "§aYou are on the capture zone !");
+        } else if (!isInZone && playersInZone.contains(player)) {
+            playersInZone.remove(player);
+            manager.handlePlayerExit(player, factionManager);
+            sendActionBar(player, "§cYou are leaving the capture zone !");
         }
     }
 
     private void startCaptureTask() {
-        captureTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!arePlayersInRegion()) {
-                    resetCapture();
-                    cancel();
-                    System.out.println("RETURN1");
-                    return;
-                }
-
-                if (System.currentTimeMillis() - lastPlayerInZoneTime > NEUTRALIZE_DELAY) {
-                    neutralizeZone();
-                    cancel();
-                    System.out.println("RETURN2");
-                    return;
-                }
-
-                Map.Entry<String, Integer> strongestFaction = getStrongestFaction();
-                if (strongestFaction == null) {
-                    return;
-                }
-
-                String leadingFaction = strongestFaction.getKey();
-                int leadingCount = strongestFaction.getValue();
-                int competingCount = factionPresence.values().stream().filter(count -> !count.equals(leadingCount)).mapToInt(Integer::intValue).sum();
-
-                if (currentFaction == null || !currentFaction.equals(leadingFaction)) {
-                    if (leadingCount > competingCount) {
-                        progress++;
-                        sendActionBarToPlayersInRegion("§8» §bProgress: §3" + progress + "§7%");
-
-                        if (progress >= CAPTURE_PROGRESS_MAX) {
-                            currentFaction = leadingFaction;
-                            progress = 0;
-                            Bukkit.broadcastMessage("§8» §4Warzone §8« §c" + currentFaction + " §7has captured the building!");
-                            startFactionRewardTask();
-                        }
-                    } else {
-                        progress = Math.max(0, progress - 1); // Reverse progress if contested
-                    }
-                }
-            }
-        }.runTaskTimer(main, 10, 10);
-    }
-
-    private boolean arePlayersInRegion() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (isPlayerInRegion(player.getLocation().getX(),
-                    player.getLocation().getY(),
-                    player.getLocation().getZ(),
-                    2774D, 56D, 3085D, 2759D, 46D, 3115D)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void resetCapture() {
-        captureTask = null;
-        progress = 0;
-        factionPresence.clear();
-    }
-
-    private Map.Entry<String, Integer> getStrongestFaction() {
-        return factionPresence.entrySet().stream()
-                .max(Comparator.comparingInt(Map.Entry::getValue))
-                .orElse(null);
-    }
-
-    private void neutralizeZone() {
-        captureTask = null;
-        currentFaction = null;
-        progress = 0;
-        factionPresence.clear();
-        Bukkit.broadcastMessage("§8» §4Warzone §8« §7The building has been neutralized.");
-    }
-
-    private void startFactionRewardTask() {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (currentFaction == null) {
-                    cancel();
+                if (playersInZone.isEmpty()) {
+                    zone.resetCapture();
                     return;
                 }
-
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    Faction faction = fm.getFactionByPlayer(player.getUniqueId());
-                    if (faction != null && faction.getName().equals(currentFaction)) {
-                        economy.withdrawPlayer(player, 300);
-                        player.sendMessage("§8» §f+§6300$");
-                    }
-                }
+                //if (!canStartCapture()) {
+                //    zone.resetCapture();
+                //    return;
+                //}
+                manager.handleCaptureTick();
+                broadcastCaptureProgress();
             }
-        }.runTaskTimer(main, 1800, 1800);
+        }.runTaskTimer(main, 0, TICK_INTERVAL);
     }
 
-    private void sendActionBarToPlayersInRegion(String message) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (isPlayerInRegion(player.getLocation().getX(),
-                    player.getLocation().getY(),
-                    player.getLocation().getZ(),
-                    2774D, 56D, 3085D, 2759D, 46D, 3115D)) {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
-            }
+    private boolean canStartCapture() {
+        if (Bukkit.getOnlinePlayers().size() < 3) return false;
+
+        long factionCount = playersInZone.stream()
+                .map(player -> factionManager.getFactionByPlayer(player.getUniqueId()))
+                .filter(faction -> faction != null)
+                .map(Faction::getName)
+                .distinct()
+                .count();
+
+        return factionCount >= 2;
+    }
+
+    private void broadcastCaptureProgress() {
+        String currentFaction = zone.getCurrentFaction();
+        int progress = zone.getProgress();
+
+        String message;
+        if (currentFaction == null) {
+            message = "§8» §7This zone is neutral. Progression : §b" + progress + "§7%";
+        } else {
+            message = "§8» §bLeading Faction : §c" + currentFaction + " §7| Progression : §b" + progress + "§7%";
+        }
+
+        for (Player player : playersInZone) {
+            sendActionBar(player, message);
         }
     }
 
-    public boolean isPlayerInRegion(double playerX, double playerY, double playerZ,
-                                    double x1, double y1, double z1,
-                                    double x2, double y2, double z2) {
-        double minX = Math.min(x1, x2);
-        double maxX = Math.max(x1, x2);
-        double minY = Math.min(y1, y2);
-        double maxY = Math.max(y1, y2);
-        double minZ = Math.min(z1, z2);
-        double maxZ = Math.max(z1, z2);
-        return (playerX >= minX && playerX <= maxX) &&
-                (playerY >= minY && playerY <= maxY) &&
-                (playerZ >= minZ && playerZ <= maxZ);
+    private void sendActionBar(Player player, String message) {
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
     }
 }

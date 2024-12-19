@@ -5,6 +5,8 @@ import com.openwar.openwarfaction.factions.FactionManager;
 import com.openwar.openwarwarzone.Handler.AllowedCommands;
 import com.openwar.openwarwarzone.Handler.LootCrate;
 import com.openwar.openwarwarzone.WarzoneCTF.CTFHandler;
+import com.openwar.openwarwarzone.WarzoneCTF.FactionCaptureManager;
+import com.openwar.openwarwarzone.WarzoneCTF.Zone;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,7 +36,9 @@ public final class Main extends JavaPlugin {
         System.out.println(" ");
         System.out.println(" OpenWar - Warzone loading...");
         if (!setupDepend()) {return;}
-        getServer().getPluginManager().registerEvents(new CTFHandler(fm, this, economy), this);
+        Zone zone = new Zone("Building");
+        FactionCaptureManager fcm = new FactionCaptureManager(zone);
+        getServer().getPluginManager().registerEvents(new CTFHandler(zone, fcm,fm, this), this);
         getServer().getPluginManager().registerEvents(new LootCrate(pl, this), this);
         getServer().getPluginManager().registerEvents(new AllowedCommands(), this);
     }
